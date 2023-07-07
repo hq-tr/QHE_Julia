@@ -1,0 +1,46 @@
+=========== 2023-02-08 ==========
+ - Moved sphere_coef() from Density.jl to Misc.jl
+ - Added HaldaneSphere.jl -- module contains useful functions on the sphere
+
+=========== 2023-02-06 ==========
+ - Added findLz() and findLzsphere() into Misc.jl
+ - Added get_Lz() and get_Lz_sphere() into FQH_state_v2.jl
+
+
+=========== 2022-11-03 ==========
+ - Added prune!(::FQH_state_mutable; tol) remove the basis with zero coefficients
+
+ - Added invert!(::FQH_state_mutable) invert the state on the sphere
+
+ - Added Base.-() subtract one state from another (missed out last time)
+ 
+ - Changed variable types in all base linear algebra operation from ::FQH_state to ::AbstractFQH_state
+
+
+=========== 2022-11-01 ==========
+ - Added a function to calculate density on the sphere.
+
+ 
+=========== 2022-10-14 ==========
+ - Added Main.FQH_states.FQH_state_mutable. As the name implies, variables of this struct can be mutated freely after they are created.
+
+ - Added AbstractFQH_state, a parent type of FQH_state and FQH_state_mutable
+
+ - Added wfnormalize!(), sphere_normalize!(), disk_normalize!() to Main.FQH_states. These functions act directly on FQH_state_mutable variable.
+
+ - Added collapse!(::FQH_state_mutable) that acts on FQH_state_mutable. This function collects all pairs of basis and coefficient in a given state; coefficients of repeated basis (if any) are added up. 
+
+ - FQH_state_mutable and above functions are useful in the flux insertion routine. 
+
+
+
+
+=========== 2022-10-04 ==========
+ - Main.FQH_states.readwf() can now read wavefunctions with complex coefficients. The imaginary unit can be written as either "i", "j", or "im".
+
+
+
+
+
+=========== 2022-09-28 ==========
+- Address allocation issues in Density.jl and Main.FQH_states.get_density_disk(). Density calculation takes 100 times shorter.
