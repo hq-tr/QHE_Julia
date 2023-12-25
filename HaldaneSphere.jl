@@ -15,7 +15,7 @@ function one_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 		push!(coef, u^(S2-i) * v^i / sphere_coef(S2/2.0, S2/2.0 -i))
 	end
 	state = wfnormalize(FQH_state(basis, coef))
-	printwf(state;fname="state")
+	#printwf(state;fname="state")
 	return state
 end
 

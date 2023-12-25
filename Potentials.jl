@@ -21,7 +21,9 @@ function gen_onebody_element!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, j
         Mu_b  = bin2dex(check_difference.*Mu)[1]
         a = count(Lam[1:Lam_a])
         b = count(Mu[1:Mu_b])
-        mat[i,j] += height * (-1)^(a+b) * C[Lam_a+1, Mu_b+1]
+        term = height * (-1)^(a+b) * C[Lam_a+1, Mu_b+1]
+        mat[i,j] += term
+        mat[j,i] += conj(term)
     elseif count_difference == 0
         #println(bin2dex(Lam))
         mat[i,j] += height * sum([C[m+1,m+1] for m in bin2dex(Lam)])

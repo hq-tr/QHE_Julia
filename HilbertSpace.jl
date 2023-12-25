@@ -16,6 +16,47 @@ function fullhilbertspace(N_el::Int, N_orb::Int; output_type="Binary")
     end
 end
 
+function bilayerhilbertspace(N_el::Int, N_orb::Int; output_type="Binary",combine_layer=false) 
+    # Generate full Hilbert space for bilayer system with N_el electrons and N_orb orbitals on each layer
+    basis_single_layer = fullhilbertspace(N_el, N_orb;output_type = output_type)
+    if combine_layer
+        basis_bilayer =[]
+        for vec1 in basis_single_layer, vec2 in basis_single_layer
+            push!(basis_bilayer, vcat(vec1, vec2))
+        end
+    else
+        layer1 = []
+        layer2 = []
+        for vec1 in basis_single_layer, vec2 in basis_single_layer
+            push!(layer1, vec1)
+            push!(layer2, vec2)
+        end
+        basis_bilayer = [layer1, layer2]
+    end
+    return basis_bilayer
+end
+
+function bilayerhilbertspace(N_el1::Int, N_el2::Int,N_orb::Int; output_type="Binary",combine_layer=false) 
+    # Generate full Hilbert space for bilayer system with N_orb orbitals on each layer, N_el1 electrons on layer 1 and N_el2 electrons on layer 2
+    basis_layer1 = fullhilbertspace(N_el1, N_orb;output_type = output_type)
+    basis_layer2 = fullhilbertspace(N_el2, N_orb;output_type = output_type)
+    if combine_layer
+        basis_bilayer =[]
+        for vec1 in basis_layer1, vec2 in basis_layer2
+            push!(basis_bilayer, vcat(vec1, vec2))
+        end
+    else
+        layer1 = []
+        layer2 = []
+        for vec1 in basis_layer1, vec2 in basis_layer2
+            push!(layer1, vec1)
+            push!(layer2, vec2)
+        end
+        basis_bilayer = [layer1, layer2]
+    end
+    return basis_bilayer
+end
+
 LECType = Tuple{Int, Int, Int}
 function checkLEC(state::BitVector, LEC::LECType, bothends = false)
     if bothends
@@ -53,5 +94,5 @@ function LECspace(N_el::Int, N_orb::Int, L_z::Int, conditions::Vector{LECType}) 
     return [vec for vec in fullspace if any(checkLEC(vec, condition) for condition in conditions)]
 end
 
-export fullhilbertspace, LECspace, LECType
+export fullhilbertspace, LECspace, LECType,bilayerhilbertspace
 end

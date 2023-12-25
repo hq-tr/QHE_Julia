@@ -1,3 +1,13 @@
+=========== 2023-12-25 ==========
+ - Added in HilbertSpace.jl a function to generate bilayer basis.
+=========== 2023-12-14 ==========
+ - Added FQH_bilayer.jl library. This library is specifically designed to handle bilayer stage with color-flux attachment.
+=========== 2023-10-20 ==========
+ - In FQH_states_v2.jl added a function to print vector with basis in decimal format
+ 
+=========== 2023-07-17 ==========
+ - In HilbertSpace.jl modified the functions to allow half-integer L_z
+ 
 =========== 2023-02-08 ==========
  - Moved sphere_coef() from Density.jl to Misc.jl
  - Added HaldaneSphere.jl -- module contains useful functions on the sphere

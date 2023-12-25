@@ -32,25 +32,6 @@ export AbstractFQH_multilayer_state, FQH_multilayer_state, FQH_multilayer_state_
 
 
 
-
-
-
-# ========================================================
-#
-#
-#                 SECOND LANDAU LEVEL MODULE 
-#
-# On the sphere, the SLL has two more orbitals than LLL
-# Basis recorded as a string of int with
-#       0 means no electrons on either
-#       1 means one electron on LLL
-#       2 means one electron on SLL
-#       3 means one electron on LLL and one electron on SLL
-# (This is the convention of DiagHam)
-#
-#
-# ========================================================
-
 module SecondLLOperations
 using ..FQH_multilayer
 

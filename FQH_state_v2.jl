@@ -5,7 +5,6 @@
 module FQH_states
 
 using LinearAlgebra
-using SpecialFunctions
 import Base.+, Base.*
 import LinearAlgebra.⋅
 import Base.display
@@ -78,19 +77,6 @@ function collapse!(vec::FQH_state_mutable)
     return 
 end
 
-function collapse(vec::FQH_state)
-    dict = Dict()
-    dim  = length(vec.basis)
-    for i in 1:dim
-        try
-            dict[vec.basis[i]] += vec.coef[i]
-        catch KeyError
-            dict[vec.basis[i]] = vec.coef[i]
-        end
-    end
-    return FQH_state(collect(keys(dict)),collect(values(dict)))
-end
-
 function coefsort!(vec::FQH_state_mutable)
     p = sortperm(abs.(vec.coef))
     vec.basis = vec.basis[p]
@@ -120,14 +106,6 @@ function disk_normalize(vec::FQH_state)
     return FQH_state(vec.basis, new_coef)
 end
 
-function disk_normalize(vec::FQH_state,shift::Float64)
-    S = (countorbital(vec)-1.)/2.
-    multiplier = [prod([sqrt(gamma(m+shift))/sqrt(2^(m+shift)) for m in bin2dex(config)]) for config in vec.basis]
-    new_coef = vec.coef.*multiplier
-    new_coef /= norm(new_coef)
-    return FQH_state(vec.basis, new_coef)
-end
-
 function wfnormalize!(vec::FQH_state_mutable)
     vec.coef /= wfnorm(vec)
 end
@@ -151,7 +129,7 @@ end
 
 
 # ------------I/O
-function printwf(state::AbstractFQH_state; fname = "")
+function printwf_bin(state::AbstractFQH_state; fname = "")
     D = dim(state)
     if length(fname) == 0
         println(D)
@@ -172,6 +150,36 @@ function printwf(state::AbstractFQH_state; fname = "")
     end
 end
 
+function printwf_dec(state::AbstractFQH_state; fname = "")
+    D = dim(state)
+    if length(fname) == 0
+        println(D)
+        for i in 1:D
+            println(sum(2 .^ bin2dex(state.basis[i])))
+            println(replace("$(state.coef[i])", "im"=>"j", " "=>""))
+        end
+    else
+        open(fname,"w") do f
+            write(f,"$D\n")
+            for i in 1:D
+                writebasis = sum(2 .^ bin2dex(state.basis[i]))
+                writecoef  = replace("$(state.coef[i])", "im"=>"j", " "=>"")
+                write(f,"$(writebasis)\n$writecoef\n")
+            end 
+        end
+
+    end
+end
+
+function printwf(state::AbstractFQH_state; fname="", format=:BIN)
+    if format == :BIN
+        printwf_bin(state;fname=fname)
+    elseif format == :DEC
+        printwf_dec(state;fname=fname)
+    else
+        println("Format not supported.")
+    end
+end
 function display(vec::AbstractFQH_state) printwf(vec) end
 
 function readwf(fname::String; mutable=false)
@@ -317,6 +325,6 @@ function get_density_sphere(vec::FQH_state, θ::Array{T} where T<: Number, ϕ::A
     end
     return den
 end
-export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, invert!, coefsort, coefsort!,readwf, printwf, collapse!, collapse, wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere
+export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, invert!, coefsort, coefsort!,readwf, printwf, collapse!, wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere
 
 end # ----- END MODULE
