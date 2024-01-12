@@ -1,7 +1,7 @@
 module MiscRoutine
 
 # Basis format conversions
-bin2dex(config::BitVector) = [i-1 for i in 1:length(config) if config[i]]
+bin2dex(config::BitVector) = findall(config) .- 1
 
 dex2bin(state::Vector{Int}, N_orb::Int) = BitVector([i-1 in state for i in 1:N_orb]) 
 

@@ -1,4 +1,6 @@
-=========== 2023-12-25 ==========
+========== 2024-01-12 ==========
+ - Changed the algorithm of MiscRoutine.bin2dex() into a more efficient one.
+========== 2023-12-25 ==========
  - Added in HilbertSpace.jl a function to generate bilayer basis.
 =========== 2023-12-14 ==========
  - Added FQH_bilayer.jl library. This library is specifically designed to handle bilayer stage with color-flux attachment.
