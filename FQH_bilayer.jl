@@ -195,6 +195,46 @@ function bilayer_density_matrix_element!(mat::SparseMatrixCSC{ComplexF64, Int64}
     end   
 end
 
+
+# The version of the function below only get the density of one layer.
+# Layer is indexed by parameter Λ. It is 1 for first layer, 2 for second, and 3 for both.
+function bilayer_density_matrix_element!(mat::SparseMatrixCSC{ComplexF64, Int64},  i::Int, j::Int, λ::BitVector,μ::BitVector, single_particle_function::Vector{ComplexF64}, Λ::Int)
+    Nₒ = length(λ) ÷ 2 # Number of orbitals on each level.
+    #print("$(Nₒ)\t\t")
+    # Easiest way is to conver the bilayer basis into a single level (of length 2Nₒ) and use the single-layer code.
+    check_difference = λ .⊻ μ
+    count_difference = count(check_difference)
+    #display(check_difference)
+    #for thing in check_difference
+    #    print("$(thing*1) ")
+    #end
+    #print(" | ")
+    #println(count_difference)
+
+    if count_difference == 2
+        #print("Different indices: ")
+        λ_a = bin2dex(check_difference.*λ)[1]
+        μ_b  = bin2dex(check_difference.*μ)[1]
+        a = count(λ[1:λ_a])
+        b = count(μ[1:μ_b])
+        #println("$(λ_a)\t$(μ_b)")
+        if abs(λ_a-μ_b)<Nₒ # The two different elements must be in the same layer.    
+            if Λ==3 || (Λ==2 && λ_a ≥ Nₒ) || (Λ==1 && λ_a < Nₒ)
+                term = (-1)^(a+b) * conj.(single_particle_function[λ_a+1]) .* single_particle_function[μ_b+1]
+                #println()
+                # The +1 above is because Julia starts counting from 1. E.g. single_particle_function[1] == ϕ_0
+                mat[i,j] += term
+                mat[j,i] += conj(term)
+            end
+        end
+    elseif count_difference == 0
+        #println(bin2dex(λ))
+        term = sum([abs2.(single_particle_function[m+1]) for m in bin2dex(λ)])
+        mat[i,j] += term
+        #println(term)
+    end   
+end
+
 function bilayer_density_element!(Nₒ::Int, den::Matrix{Float64}, coef::Number, λ::BitVector,μ::BitVector, single_particle_function::Vector{Matrix{ComplexF64}})
     #Nₒ = length(λ[1]) ÷ 2 # Number of orbitals on each level.
     check_difference = λ.⊻ μ
@@ -217,13 +257,13 @@ function bilayer_density_element!(Nₒ::Int, den::Matrix{Float64}, coef::Number,
     #println()
 end
 
-function bilayer_density_matrix(basis_list::Vector{BitVector}, single_particle_function::Vector{ComplexF64})
+function bilayer_density_matrix(basis_list::Vector{BitVector}, single_particle_function::Vector{ComplexF64};layer_choice = 3)
     dim = length(basis_list)
     mat = spzeros(ComplexF64, (dim,dim))
     for i in 1:dim
         for j in i:dim
             print("\r$i\t$j\t")
-            bilayer_density_matrix_element!(mat, i,j, basis_list[i], basis_list[j], single_particle_function)
+            bilayer_density_matrix_element!(mat, i,j, basis_list[i], basis_list[j], single_particle_function, layer_choice)
         end
     end
     return mat
@@ -234,6 +274,14 @@ function bilayer_density_matrix(basis_list::Vector{BitVector}, ϵ::Number, z_0::
     ϕ = single_particle_state_disk # Alias. Use ϕ(z, m ,Δ)
     single_particle_function= [ϕ.(z_0, m-No*(m>=No), ϵ*(m>=No)) for m in 0:2No]
     mat = bilayer_density_matrix(basis_list, single_particle_function)
+    return mat
+end
+
+function bilayer_density_matrix(basis_list::Vector{BitVector}, ϵ::Number, z_0::ComplexF64;layer_choice = 3)
+    No = length(basis_list[1]) ÷ 2
+    ϕ = single_particle_state_disk # Alias. Use ϕ(z, m ,Δ)
+    single_particle_function= [ϕ.(z_0, m-No*(m>=No), ϵ*(m>=No)) for m in 0:2No]
+    mat = bilayer_density_matrix(basis_list, single_particle_function;layer_choice = layer_choice)
     return mat
 end
 

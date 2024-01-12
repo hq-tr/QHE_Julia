@@ -1,7 +1,10 @@
 ========== 2024-01-12 ==========
  - Changed the algorithm of MiscRoutine.bin2dex() into a more efficient one.
+ - Added an alternate method in bilayer density to allow applying one-body potential to each layer separately
 ========== 2023-12-25 ==========
  - Added in HilbertSpace.jl a function to generate bilayer basis.
+=========== 2023-12-14 ==========
+ - Added FQH_bilayer.jl library. This library is specifically designed to handle bilayer stage with color-flux attachment.
 =========== 2023-12-14 ==========
  - Added FQH_bilayer.jl library. This library is specifically designed to handle bilayer stage with color-flux attachment.
 =========== 2023-10-20 ==========
@@ -10,6 +13,13 @@
 =========== 2023-07-17 ==========
  - In HilbertSpace.jl modified the functions to allow half-integer L_z
  
+=========== 2023-02-08 ==========
+ - Moved sphere_coef() from Density.jl to Misc.jl
+ - Added HaldaneSphere.jl -- module contains useful functions on the sphere
+
+=========== 2023-02-06 ==========
+ - Added findLz() and findLzsphere() into Misc.jl
+ - Added get_Lz() and get_Lz_sphere() into FQH_state_v2.jl
 =========== 2023-02-08 ==========
  - Moved sphere_coef() from Density.jl to Misc.jl
  - Added HaldaneSphere.jl -- module contains useful functions on the sphere
