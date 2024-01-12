@@ -1,5 +1,5 @@
-include("/home/trung/_qhe-julia/FQH_state_v2.jl")
-include("/home/trung/_qhe-julia/Density.jl")
+include("FQH_state_v2.jl")
+include("Density.jl")
 using .FQH_states
 using .ParticleDensity
 using BenchmarkTools
