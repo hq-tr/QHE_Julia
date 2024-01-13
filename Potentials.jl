@@ -131,6 +131,35 @@ function diracdelta_groundstate(basis_list::Vector{BitVector}, pos::Vector{T} wh
     return gs    
 end
 
+function density_matrix_element!(mat::SparseMatrixCSC{ComplexF64, Int64},  i::Int, j::Int, Lam::BitVector,Mu::BitVector, single_particle_function::Vector{ComplexF64})
+    check_difference = Lam .⊻ Mu
+    count_difference = count(check_difference)
+    if count_difference == 2
+        Lam_a = bin2dex(check_difference.*Lam)[1]
+        Mu_b  = bin2dex(check_difference.*Mu)[1]
+        a = count(Lam[1:Lam_a])
+        b = count(Mu[1:Mu_b])
+        term = (-1)^(a+b) * conj.(single_particle_function[Lam_a+1]) .* single_particle_function[Mu_b+1]
+        mat[i,j] += term
+        mat[j,i] += conj(term)
+    elseif count_difference == 0
+        #println(bin2dex(Lam))
+        mat[i,j] += sum([abs2.(single_particle_function[m+1]) for m in bin2dex(Lam)])
+    end   
+end
+
+function density_matrix(basis_list::Vector{BitVector}, single_particle_function::Vector{ComplexF64})
+    dim = length(basis_list)
+    mat = spzeros(ComplexF64, (dim,dim))
+    for i in 1:dim
+        for j in i:dim
+            density_matrix_element!(mat, i,j, basis_list[i], basis_list[j], single_particle_function)
+        end
+    end
+    return mat
+end
+
+
 function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float64, height=1.0,shift=0.0)
     No = length(basis_list[1])
     coef = one_particle_state(θ,ϕ,No-1).coef
@@ -181,9 +210,49 @@ function sphere_point_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Floa
     return mat
 end 
 
+# One pin at (θ,ϕ) and one pin at (θ,ϕ+π)
+function sphere_twinpoint_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float64, height=1.0,shift=0.0)
+    No = length(basis_list[1])
+    dim = length(basis_list)
+    S = (No-1.0)/2.0
 
+    sfunction = map(m->single_particle_state_sphere(π-θ,ϕ,S,m), -S:1:S)
+    
+    mat = spzeros(ComplexF64,(dim,dim))
 
+    for i in 1:dim
+        for j in i:dim
+            sphere_twinpoint_element!(mat, i,j, basis_list[i], basis_list[j], sfunction)
+        end
+    end
 
-export diracdelta_matrix, diracdelta_groundstate, diracdelta_element!, gen_onebody_matrix, gen_onebody_element!, gen_onebody_groundstate, sphere_bump_matrix, sphere_point_matrix
+    if shift!=0 mat += shift * sparse(I, dim, dim) end
+    return mat
+end 
+
+function sphere_twinpoint_element!(mat::SparseMatrixCSC{ComplexF64, Int64},  
+    i::Int, j::Int, Lam::BitVector,Mu::BitVector, 
+    single_particle_function::Vector{ComplexF64})
+    if i==j
+        mat[i,j] += 2* sum([abs2.(single_particle_function[m+1]) for m in bin2dex(Lam)])
+    else
+        check_difference = Lam .⊻ Mu
+        if count(check_difference) == 2
+            Lam_a = bin2dex(check_difference.*Lam)[1]
+            Mu_b  = bin2dex(check_difference.*Mu)[1]
+            if (Lam_a + Mu_b) % 2 == 0
+                a = count(Lam[1:Lam_a])
+                b = count(Mu[1:Mu_b])
+                term = 2 .* (-1)^(a+b) .* conj.(single_particle_function[Lam_a+1]) .* single_particle_function[Mu_b+1]
+                mat[i,j] += term
+                mat[j,i] += conj(term)
+            end
+        end
+    end
+end
+
+export diracdelta_matrix, diracdelta_groundstate, diracdelta_element!, 
+gen_onebody_matrix, gen_onebody_element!, gen_onebody_groundstate, 
+sphere_bump_matrix, sphere_point_matrix, sphere_twinpoint_matrix
 
 end
