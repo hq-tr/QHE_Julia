@@ -5,6 +5,11 @@ include("Misc.jl")
 using .FQH_states
 using .MiscRoutine
 
+function coefficient(u::ComplexF64,v::ComplexF64,S2::Int,i::Int)
+	return u^(S2-i) * v^i / sphere_coef(S2/2.0, S2/2.0 -i)
+end
+
+
 function one_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 	u = cos(θ/2) * exp(-0.5im * ϕ)
 	v = sin(θ/2) * exp(0.5im * ϕ)
@@ -15,11 +20,17 @@ function one_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 		push!(coef, u^(S2-i) * v^i / sphere_coef(S2/2.0, S2/2.0 -i))
 	end
 	state = wfnormalize(FQH_state(basis, coef))
-	#printwf(state;fname="state")
+	printwf(state;fname="state")
 	return state
 end
 
-export one_particle_state
+function one_particle_state_coef(θ::Float64,ϕ::Float64,S2::Int)
+	u = cos(θ/2) * exp(-0.5im * ϕ)
+	v = sin(θ/2) * exp(0.5im * ϕ)
+	return map(i->u^(S2-i) * v^i / sphere_coef(S2/2.0, S2/2.0 -i), 0:(S2))
+end
+
+export one_particle_state, one_particle_state_coef
 end
 
 

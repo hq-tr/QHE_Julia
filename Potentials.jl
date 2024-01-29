@@ -14,19 +14,19 @@ using Arpack
 
 
 function gen_onebody_element!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, j::Int, Lam::BitVector,Mu::BitVector, C::Matrix{T} where T<:Number, height::Float64)
-    check_difference = Lam .⊻ Mu
-    count_difference = count(check_difference)
-    if count_difference == 2
-        Lam_a = bin2dex(check_difference.*Lam)[1]
-        Mu_b  = bin2dex(check_difference.*Mu)[1]
-        a = count(Lam[1:Lam_a])
-        b = count(Mu[1:Mu_b])
-        term = height * (-1)^(a+b) * C[Lam_a+1, Mu_b+1]
-        mat[i,j] += term
-        mat[j,i] += conj(term)
-    elseif count_difference == 0
-        #println(bin2dex(Lam))
-        mat[i,j] += height * sum([C[m+1,m+1] for m in bin2dex(Lam)])
+    if i==j
+        mat[i,j] = height * sum([C[m+1,m+1] for m in bin2dex(Lam)])
+    else
+        check_difference = Lam .⊻ Mu
+        if sum(check_difference) == 2
+            Lam_a = findfirst(check_difference .& Lam)
+            Mu_b  = findfirst(check_difference .& Mu)
+            a = count(Lam[1:Lam_a])
+            b = count(Mu[1:Mu_b])
+            term = height * (-1)^(a+b) * C[Lam_a, Mu_b]
+            mat[i,j] += term
+            mat[j,i] += conj(term)
+        end
     end    
 end
 
@@ -182,17 +182,20 @@ function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Vector{Float64}, �
 
     dim = length(basis_list)
     mat = spzeros(Complex{Float64},(dim,dim))
+    
+    C = sum(k->begin coef = one_particle_state_coef(θ[k],ϕ[k],No-1); return coef * coef' end, 1:length(θ))
+    #for k in 1:length(θ)
+    #    coef = one_particle_state_coef(θ[k],ϕ[k],No-1)
+    #    C += coef * coef'
+    #end
 
-    for k in length(θ)
-        coef = one_particle_state(θ[k],ϕ[k],No-1).coef
-        C  = coef * coef'
-        for i in 1:dim
-            #print("\r$i\t")
-            for j in i:dim
-                gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
-            end
+    for i in 1:dim
+        #print("\r$i\t")
+        for j in i:dim
+            gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
         end
     end
+
 
     if shift!=0 mat += shift * sparse(I, dim, dim) end
     return mat
