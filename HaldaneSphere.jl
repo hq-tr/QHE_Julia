@@ -37,7 +37,7 @@ function split_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 	return state
 end
 
-export one_particle_state
+export one_particle_state, split_particle_state
 end
 
 
