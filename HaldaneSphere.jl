@@ -19,6 +19,9 @@ function one_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 	return state
 end
 
+function one_particle_state_coef(θ::Float64,ϕ::Float64,S2::Int)
+	return map(i-> u^(S2-i) * v^i / sphere_coef(S2/2.0, S2/2.0 -i), 0:S2)
+end
 
 
 function split_particle_state(θ::Float64,ϕ::Float64,S2::Int)
@@ -37,12 +40,16 @@ function split_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 	return state
 end
 
-export one_particle_state, split_particle_state
+function split_particle_state_coef(θ::Float64,ϕ::Float64,S2::Int)
+	return map(i->( u^(S2-i) * v^i + uu^(S2-i) * vv^i ) / sphere_coef(S2/2.0, S2/2.0 -i), 0:S2)
+end
+
+export one_particle_state, split_particle_state, one_particle_state_coef,split_particle_state
 end
 
 
 
-#=
+
 function main()
 	println("Creating a coherent state on the sphere.")
 	println("Input θ and ϕ (as a multiple of π):")
@@ -51,8 +58,7 @@ function main()
 	println("Input N_orb:")
 	No = parse(Float64, readline())
 
-	@time one_particle_state(θ,ϕ,No-1)
+	@time split_particle_state(θ,ϕ,No-1)
 end
 
-main()
-=#
+#main()

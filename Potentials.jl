@@ -179,7 +179,7 @@ end
 
 function sphere_twinbump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float64, height=1.0,shift=0.0)
     No = length(basis_list[1])
-    coef = split_particle_state(θ,ϕ,No-1).coef
+    coef = one_particle_state_coef(θ,ϕ,No-1) + one_particle_state_coef(θ,ϕ+π,No-1)
     C  = coef * coef'
 
     dim = length(basis_list)
