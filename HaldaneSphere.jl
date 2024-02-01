@@ -20,6 +20,8 @@ function one_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 end
 
 function one_particle_state_coef(θ::Float64,ϕ::Float64,S2::Int)
+	u = cos(θ/2) * exp(-0.5im * ϕ)
+	v = sin(θ/2) * exp(0.5im * ϕ)
 	return map(i-> u^(S2-i) * v^i / sphere_coef(S2/2.0, S2/2.0 -i), 0:S2)
 end
 
@@ -41,6 +43,10 @@ function split_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 end
 
 function split_particle_state_coef(θ::Float64,ϕ::Float64,S2::Int)
+	u = cos(θ/2) * exp(-0.5im * ϕ)
+	v = sin(θ/2) * exp(0.5im * ϕ)
+	uu = cos(θ/2) * exp(-0.5im * ϕ)
+	vv = sin(θ/2) * exp(0.5im * ϕ)
 	return map(i->( u^(S2-i) * v^i + uu^(S2-i) * vv^i ) / sphere_coef(S2/2.0, S2/2.0 -i), 0:S2)
 end
 
