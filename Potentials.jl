@@ -177,6 +177,23 @@ function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float
     return mat
 end 
 
+function sphere_twinbump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float64, height=1.0,shift=0.0)
+    No = length(basis_list[1])
+    coef = split_particle_state(θ,ϕ,No-1).coef
+    C  = coef * coef'
+
+    dim = length(basis_list)
+    mat = spzeros(Complex{Float64},(dim,dim))
+    for i in 1:dim
+        #print("\r$i\t")
+        for j in i:dim
+            gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
+        end
+    end
+    if shift!=0 mat += shift * sparse(I, dim, dim) end
+    return mat
+end 
+
 function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Vector{Float64}, ϕ::Vector{Float64}, height=1.0,shift=0.0)
     No = length(basis_list[1])
 

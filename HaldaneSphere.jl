@@ -19,6 +19,24 @@ function one_particle_state(θ::Float64,ϕ::Float64,S2::Int)
 	return state
 end
 
+
+
+function split_particle_state(θ::Float64,ϕ::Float64,S2::Int)
+	u = cos(θ/2) * exp(-0.5im * ϕ)
+	v = sin(θ/2) * exp(0.5im * ϕ)
+	uu = cos(θ/2) * exp(-0.5im * ϕ)
+	vv = sin(θ/2) * exp(0.5im * ϕ)
+	basis = BitVector[]
+	coef  = ComplexF64[]
+	for i in 0:(S2)
+		push!(basis, BitVector([j==i for j in 0:(S2)]))
+		push!(coef, ( u^(S2-i) * v^i + uu^(S2-i) * vv^i ) / sphere_coef(S2/2.0, S2/2.0 -i))
+	end
+	state = wfnormalize(FQH_state(basis, coef))
+	#printwf(state;fname="state")
+	return state
+end
+
 export one_particle_state
 end
 
