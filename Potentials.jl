@@ -270,6 +270,7 @@ end
 
 export diracdelta_matrix, diracdelta_groundstate, diracdelta_element!, 
 gen_onebody_matrix, gen_onebody_element!, gen_onebody_groundstate, 
-sphere_bump_matrix, sphere_point_matrix, sphere_twinpoint_matrix
+sphere_bump_matrix, sphere_point_matrix, sphere_twinpoint_matrix,
+sphere_twinbump_matrix
 
 end
