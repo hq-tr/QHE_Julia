@@ -5,6 +5,26 @@ bin2dex(config::BitVector) = findall(config) .- 1
 
 dex2bin(state::Vector{Int}, N_orb::Int) = BitVector([i-1 in state for i in 1:N_orb]) 
 
+function dec2bin(num::Int, N_orb::Int)
+	rawbin = BitVector(digits(num,base=2))
+	for i in 1:(N_orb-length(rawbin))
+		push!(rawbin,0)
+	end
+	return rawbin
+end
+
+function dec2binreverse(num::Int, N_orb::Int)
+	rawbin = BitVector(digits(num,base=2))
+	for i in 1:(N_orb-length(rawbin))
+		push!(rawbin,0)
+	end
+	return reverse(rawbin)
+end
+
+function dec2bin(num::String,N_orb::Int)
+	return dec2bin(parse(Int,num), N_orb)
+end
+
 # Normalization coefficient on the sphere
 sphere_coef(S,m) =   sqfactorial(S-m)/sqfactorial(S+m+1, 2S+1)
 
@@ -25,5 +45,5 @@ sqfactorial(N) = prod(map(sqrt, 1:N))
 
 sqfactorial(n,N) = prod(map(sqrt, n:N))
 
-export bin2dex, sqfactorial, dex2bin, findLz, findLzsphere, sphere_coef
+export bin2dex, sqfactorial, dex2bin, findLz, findLzsphere, sphere_coef, dec2bin, dec2binreverse
 end

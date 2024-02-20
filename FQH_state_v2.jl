@@ -205,6 +205,30 @@ function readwf(fname::String; mutable=false)
         end
 end
 
+function readwfdecimal(fname::String, N_o::Int; mutable=false)
+        f = open(fname)
+        content = readlines(f)
+        dim = parse(Int64, content[1])
+        basis = [dec2bin(y,N_o) for y in content[2:2:end]]
+        #println(basis[1])
+        println("The dimension is $dim")
+        try
+            global co = [parse(Float64, x) for x in content[3:2:end]]
+        catch ArgumentError
+            println("Reading coefficients as complex numbers")
+            global co = [parse(Complex{Float64}, x) for x in content[3:2:end]]
+        finally
+            close(f)
+            #println("Success")
+        end
+        if mutable
+            return FQH_state_mutable(basis,co)
+        else
+            return FQH_state(basis, co)
+        end
+end
+
+readwfdec = readwfdecimal
 
 #------------- COLLATE VECTORS WITH DIFFERENT BASIS
 # (Useful for subsequent operations)
@@ -325,6 +349,10 @@ function get_density_sphere(vec::FQH_state, θ::Array{T} where T<: Number, ϕ::A
     end
     return den
 end
-export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, invert!, coefsort, coefsort!,readwf, printwf, collapse!, wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere
+export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
+    invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, collapse!, 
+    wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, 
+    disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, 
+    get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere
 
 end # ----- END MODULE
