@@ -26,6 +26,11 @@ import Base.split
 
 abstract type Abstractbilayer_state end
 
+# =============== DEFINE THE STRUCT VARIABLE TYPE ===============
+# As per Julia convention, the name of the type should have the first letter in every word capitalized.
+# E.g. BilayerState instead of bilayerstate or bilayer_state
+# However, I forgot.
+
 struct bilayer_state <: Abstractbilayer_state
     basis::Vector{Vector{BitVector}}
     coef:: Vector{Number}
@@ -42,24 +47,42 @@ mutable struct bilayer_state_mutable<: Abstractbilayer_state
     #shift = zeros(LLindex) 
 end
 
+# Add alias so type names according to Julia convention can also be used
+BilayerState = bilayer_state
+BilayerStateMutable = bilayer_state_mutable
+AbstractBilayerState = Abstractbilayer_state
+
+# =============== MISCELLANEOUS FUNCTIONS ===============
 function getdim(vec::Abstractbilayer_state)
     return lenght(vec.basis[1])
 end
 
+# Split the state into two single-layer wavefunctions with the corresponding coefficients
 function split(vec::Abstractbilayer_state)
     state1 = disk_normalize(FQH_state(map(x->x[1],vec.basis), vec.coef))
     state2 = disk_normalize(FQH_state(map(x->x[2],vec.basis), vec.coef),0.5)
     return state1, state2
 end
 
+# Split a single basis configuration (e.g. 11001001) into two (equal) parts (e.g. 1100 and 1001)
 function basissplit(basis::BitVector)
     No = length(basis) ÷ 2
     return [basis[1:No], basis[No+1:end]]
 end
 
+# Combine two basis configurations (e.g. 1100 and 1001) into one (e.g. 11001001)
 function basiscombine(basis::Vector{BitVector})
     return vcat(basis[1], basis[2])
 end
+
+# Calculate Lz of a given state on the DISK
+function findLz(state::Abstractbilayer_state, ϵ::Float64)
+    Lz_basis1 = map(x->sum(findall(x).-1), state.basis[1])
+    Lz_basis2 = map(x->sum(findall(x).-(1-ϵ)), state.basis[2])
+    return (Lz_basis1 + Lz_basis2) ⋅ abs2.(state.coef)
+end
+
+# =============== INPUT/OUTPUT ===============
 
 function bilayerreadwf(fname::String; mutable=false)
         f = open(fname)
@@ -95,6 +118,7 @@ function bilayerprintwf(vec::Abstractbilayer_state;fname="",format=:BIN)
     printwf(state;fname=fname,format=format)
 end
 
+# =============== DENSITY CALCULATION ===============
 # Single-particle LLL eigenstates. Here Δ is the shift. 
 single_particle_state_disk(z::Number,m::Integer,Δ::Number) = z.^(m+Δ) * exp.(-abs.(z)^2) * sqrt(2^m / (2π)) / sqrt(gamma(m+Δ+1))
 
@@ -156,7 +180,7 @@ function disk_density(vec::Abstractbilayer_state,fname::String)
     savefig(p, "$(fname).svg")
 end
 
-
+# =============== ONE-BODY-POTENTIAL ===============
 # Calculate the matrix representation of the density operator given a basis
 # Each λ and μ is a BitVector of length 2Nₒ where Nₒ is the number of orbital on each level. Functions basiscombine and basissplit may be useful.
 
@@ -257,6 +281,7 @@ function bilayer_density_element!(Nₒ::Int, den::Matrix{Float64}, coef::Number,
     #println()
 end
 
+# Function to be called by subsequent functions
 function bilayer_density_matrix(basis_list::Vector{BitVector}, single_particle_function::Vector{ComplexF64};layer_choice = 3)
     dim = length(basis_list)
     mat = spzeros(ComplexF64, (dim,dim))
@@ -269,6 +294,9 @@ function bilayer_density_matrix(basis_list::Vector{BitVector}, single_particle_f
     return mat
 end
 
+## ======= Below are the two functions for end-user use
+
+# If layer choice is NOT indicated, apply potential to both layers.
 function bilayer_density_matrix(basis_list::Vector{BitVector}, ϵ::Number, z_0::ComplexF64)
     No = length(basis_list[1]) ÷ 2
     ϕ = single_particle_state_disk # Alias. Use ϕ(z, m ,Δ)
@@ -277,6 +305,7 @@ function bilayer_density_matrix(basis_list::Vector{BitVector}, ϵ::Number, z_0::
     return mat
 end
 
+# If layer choice is indicated
 function bilayer_density_matrix(basis_list::Vector{BitVector}, ϵ::Number, z_0::ComplexF64;layer_choice = 3)
     No = length(basis_list[1]) ÷ 2
     ϕ = single_particle_state_disk # Alias. Use ϕ(z, m ,Δ)
@@ -286,7 +315,8 @@ function bilayer_density_matrix(basis_list::Vector{BitVector}, ϵ::Number, z_0::
 end
 
 export Abstractbilayer_state, single_particle_state_disk,bilayer_state, 
-        bilayer_state_mutable, disk_density, bilayerprintwf, 
-        bilayerreadwf,display,bilayer_density_matrix,basissplit, 
-        basiscombine, bilayer_density_element!
+        bilayer_state_mutable, BilayerState, BilayerStateMutable, AbstractBilayerState,
+        disk_density, bilayerprintwf, bilayerreadwf,display,
+        bilayer_density_matrix, basissplit, 
+        basiscombine, bilayer_density_element!, findLz
 end # End of module
