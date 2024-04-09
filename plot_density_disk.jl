@@ -11,6 +11,7 @@ ENV["GKSwstype"] = "100" # Disconnect from Display
 function main()
 @inlinearguments begin
     @argumentrequired String fname "-f" "--filename"
+    @argumentdefault Int 0 n "-n" "--nLL"
 end
 
 state = readwf(fname)
@@ -28,7 +29,11 @@ Y = repeat(y, inner=(1,N))
 X = collect(transpose(Y))
 
 Z = 0.5(X+Y*im)
-single_particle = [single_particle_state_disk.(Z,m) for m in 0:length(state.basis[1])]
+if n == 1
+    single_particle = [single_particle_state_disk.(Z,m) for m in 0:length(state.basis[1])]
+else
+    single_particle = [single_particle_state_disk.(Z,m,n) for m in 0:length(state.basis[1])]
+end
 
 D = dim(state)
 

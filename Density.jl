@@ -5,7 +5,9 @@ include("Misc.jl")
 using .MiscRoutine
 
 using SparseArrays
+using HypergeometricFunctions
 
+# LLL single-particle states
 single_particle_state_disk(z::Number,m::Integer) = z.^m * exp.(-abs.(z)^2) * sqrt(2^m / (2π)) / sqfactorial(m)
 
 single_particle_state_disk(z::Vector{T} where T <: Number,m::Integer) = z.^m * exp.(-abs.(z)^2) * sqrt(2^m / (2π)) / sqfactorial(m)
@@ -13,6 +15,16 @@ single_particle_state_disk(z::Vector{T} where T <: Number,m::Integer) = z.^m * e
 single_particle_state_sphere(θ::Number, φ::Number, S::Number, m::Number) = cos(θ/2)^(S+m) * sin(θ/2)^(S-m) * exp(m*im*φ) / sphere_coef(S,m)
 
 single_particle_state_sphere(θ::Array{T} where T<: Number, φ::Array{T} where T<: Number, S::Number, m::Number) = cos.(θ./2).^(S.+m) .* sin.(θ/2).^(S.-m) .* exp.(m*im.*φ) / sphere_coef(S,m)
+
+# Higher LL single-particle states
+# Same function names but taking one additional argument (n = LL index)
+
+# general laguerre
+genlaguerre(n::Integer,α::Integer,x::Number) = binomial(n+α,n) * HypergeometricFunctions.M(-n, α+1,x)
+genlaguerre(n::Integer,α::Integer,x::Vector{T} where T<:Number) = collect(map(xx -> genlaguerre(n,α,xx) for xx in x))
+
+single_particle_state_disk(z::Number,m::Integer,n::Integer) = z.^m * exp.(-abs.(z)^2) * (-1)^n / (sqrt(2π*2^m) * sqfactorial(n+1,n+m)) * genlaguerre(n,m,abs2(z)/2)
+single_particle_state_disk(z::Vector{T} where T <: Number,m::Integer, n::Integer) = z.^m * exp.(-abs.(z)^2) / (sqrt(2π*2^m) * sqfactorial(n+1,n+m)) * genlaguerre(n,m,abs2.(z)./2)
 
 function density_element_disk(Lam::BitVector,Mu::BitVector, x::Real,y::Real)
     z = 0.5(x+y*im)
