@@ -31,7 +31,7 @@ if style=="heatmap"
     X = collect(transpose(Y))
 
     Z = 0.5(X+Y*im)
-    if n == 1
+    if n == 0
         single_particle = [single_particle_state_disk.(Z,m) for m in 0:length(state.basis[1])]
     else
         single_particle = [single_particle_state_disk.(Z,m,n) for m in 0:length(state.basis[1])]
@@ -67,9 +67,10 @@ if style=="heatmap"
 
 elseif style=="line"
 
-    Z = collect(0:0.05:Rmax)
+    R = collect(0:0.05:R_max)
 
-    if n == 1
+    Z = ComplexF64.(reshape(R, (1,length(R)))) # single-row matrix
+    if n == 0
         single_particle = [single_particle_state_disk.(Z,m) for m in 0:length(state.basis[1])]
     else
         single_particle = [single_particle_state_disk.(Z,m,n) for m in 0:length(state.basis[1])]
@@ -88,7 +89,7 @@ elseif style=="line"
     end
     end
 
-    p = plot(Z, den, xlabel="R", ylabel="ρ(R)", title="Electron density", legend=false)
+    p = plot(R, den[1,:].*2π, xlabel="R", ylabel="ρ(R)", title="Electron density", legend=false)
     savefig(p, "$(fname)_density_line.svg")
 
     println("-----")
