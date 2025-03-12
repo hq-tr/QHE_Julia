@@ -117,6 +117,21 @@ function density_element_gen!(den::Matrix{Float64}, coef::Number, Lam::BitVector
     end    
 end
 
+function density_element_gen!(den::Vector{Float64}, coef::Number, Lam::BitVector,Mu::BitVector, single_particle_function::Vector{Vector{ComplexF64}})
+    check_difference = Lam .⊻ Mu
+    count_difference = count(check_difference)
+    if count_difference == 2
+        Lam_a = bin2dex(check_difference.*Lam)[1]
+        Mu_b  = bin2dex(check_difference.*Mu)[1]
+        a = count(Lam[1:Lam_a])
+        b = count(Mu[1:Mu_b])
+        den .+= real.(coef * (-1)^(a+b) * conj.(single_particle_function[Lam_a+1]) .* single_particle_function[Mu_b+1])
+    elseif count_difference == 0
+        #println(bin2dex(Lam))
+        den .+= real.(coef*sum([abs2.(single_particle_function[m+1]) for m in bin2dex(Lam)]))
+    end    
+end
+
 function density_matrix_element!(mat::SparseMatrixCSC{ComplexF64, Int64},  i::Int, j::Int, Lam::BitVector,Mu::BitVector, single_particle_function::Vector{ComplexF64})
     check_difference = Lam .⊻ Mu
     count_difference = count(check_difference)

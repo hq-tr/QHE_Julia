@@ -303,6 +303,17 @@ function get_Lz_sphere(vec::AbstractFQH_state)
     return sum(Lz_list .* abs2.(vec.coef))
 end
 
+function check_Lz_eigenstate(vec::AbstractFQH_state)
+    firstLZ = findLz(vec.basis[1])
+    ret = true
+    for term in vec.basis
+        if findLz(term) != firstLZ
+            ret = false
+            break
+        end
+    end
+    return ret
+end
 
 # -------- Calculate density 
 include("Density.jl")
@@ -353,6 +364,8 @@ export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!,
     invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, collapse!, 
     wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, 
     disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, 
-    get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere
+    get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere, 
+    check_Lz_eigenstate
+
 
 end # ----- END MODULE

@@ -1,5 +1,5 @@
-include("FQH_state_v2.jl")
-include("Density.jl")
+include("/home/trung/_qhe-julia/FQH_state_v2.jl")
+include("/home/trung/_qhe-julia/Density.jl")
 using .FQH_states
 using .ParticleDensity
 using BenchmarkTools
@@ -19,17 +19,26 @@ R_max = sqrt(2*No)+0.2
 
 println("Check norm = $(wfnorm(state))")
 
+# Create the plot range
 θ = LinRange(0,π,40)
 ϕ = LinRange(0,2π, 80)
 
 N₁ = length(θ)
 N₂ = length(ϕ)
 
+# Create the θ-ϕ mesh grid
 Θ = repeat(θ, inner=(1,N₂))
 Φ = repeat(ϕ', inner=(N₁,1))
 
-#den = zeros(size(Z))
-@time den = get_density_sphere(state, Θ, Φ )
+if check_Lz_eigenstate(state)
+    # If the state is eigenstate of Lz, only calculate density along ϕ=0
+    println("NOTE: The state is an Lz eigenstate.")
+    @time den_line = get_density_sphere(state, collect(θ), zeros(size(θ)))
+    den = repeat(den_line,inner=(1,N₂))
+else
+    #den = zeros(size(Z))
+    @time den = get_density_sphere(state, Θ, Φ)
+end
 
 println("-----")
 #den = @time get_density_disk(state, X, Y)
