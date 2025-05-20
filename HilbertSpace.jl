@@ -71,7 +71,7 @@ findLZ(state::BitVector) = sum(state.*(0:(length(state)-1)))
 
 findLZ(state::Vector{Int}, S::Real) = -S*length(state) + sum(state)
 
-function fullhilbertspace(N_el::Int, N_orb::Int, L_z::Int; output_type="Binary")
+function fullhilbertspace(N_el::Int, N_orb::Int, L_z::Number; output_type="Binary")
     S = 0.5(N_orb-1)
     list_generator = combinations(0:(N_orb-1), N_el)
     if output_type=="Binary"
