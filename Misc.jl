@@ -45,5 +45,9 @@ sqfactorial(N) = prod(map(sqrt, 1:N))
 
 sqfactorial(n,N) = prod(map(sqrt, n:N))
 
-export bin2dex, sqfactorial, dex2bin, findLz, findLzsphere, sphere_coef, dec2bin, dec2binreverse
+
+# Miscellaneous function for the torus
+get_k_vector(m::Int,Nx::Int,Ny::Int) = (m÷Nx)/Nx,(m%Nx)/Ny # These are actually coefficients [m₁,m₂] such that k = m₁b₁+m₂b₂
+
+export bin2dex, sqfactorial, dex2bin, findLz, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
 end

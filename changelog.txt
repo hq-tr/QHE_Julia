@@ -1,3 +1,5 @@
+========== 2025-10-03 ==========
+ - Started work on FCI.jl
 ========== 2024-01-12 ==========
  - Changed the algorithm of MiscRoutine.bin2dex() into a more efficient one.
  - Added an alternate method in bilayer density to allow applying one-body potential to each layer separately

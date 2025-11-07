@@ -345,6 +345,15 @@ function get_density_disk(vec::FQH_state, x::Array{T} where T<: Number, y::Array
     return den
 end
 
+function get_density_sphere(vec::FQH_state, θ::Real, ϕ::Real)
+    S = 0.5(countorbital(vec)-1)
+    single_particle = [single_particle_state_sphere(θ,ϕ,S,S-m) for m in 0:countorbital(vec)]
+    D = dim(vec)
+    element(i,j) = 2^(i!=j) * conj(vec.coef[i]) * vec.coef[j] * density_element_gen(vec.basis[i], vec.basis[j], single_particle)
+    density = abs(sum(sum(element(i,j) for i in j:D) for j in 1:D))
+    return density
+end
+
 function get_density_sphere(vec::FQH_state, θ::Array{T} where T<: Number, ϕ::Array{T} where T <: Number)
     #z = 0.5*(x .+ y*im)
     S = 0.5(countorbital(vec)-1)
@@ -360,6 +369,7 @@ function get_density_sphere(vec::FQH_state, θ::Array{T} where T<: Number, ϕ::A
     end
     return den
 end
+
 export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
     invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, collapse!, 
     wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, 

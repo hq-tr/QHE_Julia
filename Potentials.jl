@@ -30,6 +30,13 @@ function gen_onebody_element!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, j
     end    
 end
 
+function gen_onebody_element_diagonal!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, Lam::BitVector, C::Vector{T} where T<:Number, height::Float64)
+    mat[i,i] += height * sum([C[m+1] for m in bin2dex(Lam)])  
+end
+
+function gen_onebody_element_diagonal!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, Lam::BitVector, C::Matrix{T} where T<:Number, height::Float64)
+    mat[i,i] += height * sum([C[m+1,m+1] for m in bin2dex(Lam)])  
+end
 
 function gen_onebody_matrix(basis_list::Vector{BitVector}, C::Matrix{T} where T<:Number,height=1.,shift=0.)
     dim = length(basis_list)
@@ -54,6 +61,7 @@ function gen_onebody_groundstate(basis_list::Vector{BitVector}, C::Matrix{T} whe
     return gs    
 end
 
+# This function updates the elements for one pin with a given pos and height
 function diracdelta_element!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, j::Int, Lam::BitVector,Mu::BitVector, pos::Number, height::Number)
     R = abs(pos)
     θ = angle(pos) + π
@@ -75,6 +83,37 @@ function diracdelta_element!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, j:
     end    
 end
 
+# This function updates the elements for multiple pins with a different positions and heights
+function diracdelta_element!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, j::Int, Lam::BitVector,Mu::BitVector, 
+            pos::Vector{T} where T<:Number, heights::Vector{T} where T<:Number)
+    check_difference = Lam .⊻ Mu
+    count_difference = count(check_difference)
+    if count_difference == 2
+        Lam_a = bin2dex(check_difference.*Lam)[1]
+        Mu_b  = bin2dex(check_difference.*Mu)[1]
+        a = count(Lam[1:Lam_a])
+        b = count(Mu[1:Mu_b])
+        for (po,height) in zip(pos,heights)
+            R = abs(po)
+            θ = angle(po) + π
+            term = height * (-1)^(a+b) * (-1)^(Mu_b-Lam_a) * π * R^(Lam_a+Mu_b) * exp(-R^2/2) * exp(im*(Mu_b-Lam_a)*θ)/((√2)^(Lam_a+Mu_b)*sqfactorial(Lam_a)*sqfactorial(Mu_b))
+            
+            mat[i,j] += term
+            if i!=j mat[j,i] += conj(term) end
+        end
+    elseif count_difference == 0
+        #println(bin2dex(Lam))
+        for (po,height) in zip(pos,heights)
+            R = abs(po)
+            θ = angle(po) + π
+            for m in bin2dex(Lam)
+                mat[i,j] += height *  π*R^(2m) * exp(-R^2/2)/(2^m*factorial(big(m)))
+            end
+        end
+    end    
+end
+
+# this function constructs the matrix for one pin with a given pos and height
 function diracdelta_matrix(basis_list::Vector{BitVector}, pos::Number,height=1.,shift=0.)
     dim = length(basis_list)
     mat = spzeros(Complex{Float64},(dim,dim))
@@ -88,7 +127,8 @@ function diracdelta_matrix(basis_list::Vector{BitVector}, pos::Number,height=1.,
     return mat
 end 
 
-function diracdelta_matrix(basis_list::Vector{BitVector}, pos::Vector{T} where T<:Number,height=1.,shift=0.)
+# this function constructs the matrix for multiple pins with positions given by pos, all of the same height
+function diracdelta_matrix(basis_list::Vector{BitVector}, pos::Vector{T} where T<:Number,height::Float64=1.,shift=0.)
     dim = length(basis_list)
     mat = spzeros(Complex{Float64},(dim,dim))
     for i in 1:dim
@@ -97,6 +137,21 @@ function diracdelta_matrix(basis_list::Vector{BitVector}, pos::Vector{T} where T
             for po in pos
                 diracdelta_element!(mat, i, j, basis_list[i], basis_list[j], po,height)
             end
+        end
+    end
+    if shift!=0 mat += shift * sparse(I, dim, dim) end
+    return mat
+end 
+
+
+# this function constructs the matrix for multiple pins with different positions and heights
+function diracdelta_matrix(basis_list::Vector{BitVector}, pos::Vector{T} where T<:Number,heights::Vector{T} where T<:Number,shift=0.)
+    dim = length(basis_list)
+    mat = spzeros(Complex{Float64},(dim,dim))
+    for i in 1:dim
+        #print("\r$i\t")
+        for j in i:dim
+            diracdelta_element!(mat, i, j, basis_list[i], basis_list[j], pos,heights)
         end
     end
     if shift!=0 mat += shift * sparse(I, dim, dim) end
@@ -174,6 +229,27 @@ function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float
         end
     end
     if shift!=0 mat += shift * sparse(I, dim, dim) end
+    return mat
+end 
+
+function sphere_wide_bump_matrix(basis_list::Vector{BitVector},k::Int=2, height::Float64=1.0,shift::Float64=0.0,location::Symbol=:north)
+    No = length(basis_list[1])
+    dim = length(basis_list)
+    mat = spzeros(Complex{Float64},(dim,dim))
+    
+    if location == :north
+        C = vcat(ones(Float64,k), zeros(Float64,No-k))
+    elseif location == :south
+        C = vcat(zeros(Float64,No-k),ones(Float64,k))
+    else
+        println("WARNING: 'location' argument must be either :north or :south")
+        println("Otherwise, an empty matrix will be returned.")
+        return mat
+    end
+    for i in 1:dim
+        gen_onebody_element_diagonal!(mat, i, basis_list[i], C, height)
+    end
+    if !iszero(shift) mat += shift * sparse(I, dim, dim) end
     return mat
 end 
 
@@ -271,6 +347,6 @@ end
 export diracdelta_matrix, diracdelta_groundstate, diracdelta_element!, 
 gen_onebody_matrix, gen_onebody_element!, gen_onebody_groundstate, 
 sphere_bump_matrix, sphere_point_matrix, sphere_twinpoint_matrix,
-sphere_twinbump_matrix
+sphere_twinbump_matrix,sphere_wide_bump_matrix
 
 end
