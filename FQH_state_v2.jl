@@ -303,6 +303,7 @@ function get_Lz_sphere(vec::AbstractFQH_state)
     return sum(Lz_list .* abs2.(vec.coef))
 end
 
+
 function check_Lz_eigenstate(vec::AbstractFQH_state)
     firstLZ = findLz(vec.basis[1])
     ret = true

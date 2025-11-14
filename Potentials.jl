@@ -14,20 +14,29 @@ using Arpack
 
 
 function gen_onebody_element!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, j::Int, Lam::BitVector,Mu::BitVector, C::Matrix{T} where T<:Number, height::Float64)
-    check_difference = Lam .⊻ Mu
-    count_difference = count(check_difference)
-    if count_difference == 2
-        Lam_a = bin2dex(check_difference.*Lam)[1]
-        Mu_b  = bin2dex(check_difference.*Mu)[1]
-        a = count(Lam[1:Lam_a])
-        b = count(Mu[1:Mu_b])
-        term = height * (-1)^(a+b) * C[Lam_a+1, Mu_b+1]
-        mat[i,j] += term
-        mat[j,i] += conj(term)
-    elseif count_difference == 0
-        #println(bin2dex(Lam))
+    if i==j
         mat[i,j] += height * sum([C[m+1,m+1] for m in bin2dex(Lam)])
-    end    
+    else
+        #check_difference = Lam .⊻ Mu
+        #count_difference = count(check_difference)
+        diff_index_Lam   = findall(Lam .& .!Mu) # all indices where Lam is 1 and Mu is 0. Indexing starts from 1
+        #if count_difference == 2
+        if length(diff_index_Lam) == 1
+            #Lam_a = bin2dex(check_difference.*Lam)[1]
+            #Mu_b  = bin2dex(check_difference.*Mu)[1]
+            Lam_a = diff_index_Lam[1]
+            Mu_b  = findall(Mu .& .!Lam)[1]
+            a = count(Lam[1:(Lam_a-1)])
+            b = count(Mu[1:(Mu_b-1)])
+            term = height * (-1)^(a+b) * C[Lam_a, Mu_b]
+            mat[i,j] += term
+            mat[j,i] += conj(term)
+        #elseif count_difference == 0
+        #elseif length(diff_index_Lam) == 0
+            #println(bin2dex(Lam))
+            #mat[i,j] += height * sum([C[m+1,m+1] for m in bin2dex(Lam)])
+        end   
+    end 
 end
 
 function gen_onebody_element_diagonal!(mat::SparseMatrixCSC{ComplexF64, Int64}, i::Int, Lam::BitVector, C::Vector{T} where T<:Number, height::Float64)
@@ -215,7 +224,7 @@ function density_matrix(basis_list::Vector{BitVector}, single_particle_function:
 end
 
 
-function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float64, height=1.0,shift=0.0)
+function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float64, height=1.0,shift=0.0;verbose=false)
     No = length(basis_list[1])
     coef = one_particle_state(θ,ϕ,No-1).coef
     C  = coef * coef'
@@ -223,11 +232,38 @@ function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float
     dim = length(basis_list)
     mat = spzeros(Complex{Float64},(dim,dim))
     for i in 1:dim
-        #print("\r$i\t")
+        if verbose && ((i-1)%(dim÷100) == 0)
+            print("\rProgress: $(i÷(dim÷100))%\t\t")
+        end
         for j in i:dim
             gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
         end
     end
+    if shift!=0 mat += shift * sparse(I, dim, dim) end
+    return mat
+end 
+
+# This is for multiple pins of the same height
+function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Vector{Float64}, ϕ::Vector{Float64}, height=1.0,shift=0.0;verbose=false)
+    No = length(basis_list[1])
+
+    dim = length(basis_list)
+    mat = spzeros(Complex{Float64},(dim,dim))
+
+    C = sum(k->begin 
+        coef = one_particle_state(θ[k],ϕ[k],No-1).coef
+        coef * coef'
+        end,1:length(θ))
+    for i in 1:dim
+        if verbose && ((i-1)%(dim÷100) == 0)
+            print("\rProgress: $(i÷(dim÷100))%\t\t")
+        end
+        for j in i:dim
+            gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
+        end
+    end
+
+
     if shift!=0 mat += shift * sparse(I, dim, dim) end
     return mat
 end 
@@ -266,27 +302,6 @@ function sphere_twinbump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::F
             gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
         end
     end
-    if shift!=0 mat += shift * sparse(I, dim, dim) end
-    return mat
-end 
-
-function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Vector{Float64}, ϕ::Vector{Float64}, height=1.0,shift=0.0)
-    No = length(basis_list[1])
-
-    dim = length(basis_list)
-    mat = spzeros(Complex{Float64},(dim,dim))
-
-    for k in length(θ)
-        coef = one_particle_state(θ[k],ϕ[k],No-1).coef
-        C  = coef * coef'
-        for i in 1:dim
-            #print("\r$i\t")
-            for j in i:dim
-                gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
-            end
-        end
-    end
-
     if shift!=0 mat += shift * sparse(I, dim, dim) end
     return mat
 end 
