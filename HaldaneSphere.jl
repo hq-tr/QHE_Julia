@@ -1,5 +1,5 @@
-include("FQH_state_v2.jl")
-using LinearAlgebra
+#include("FQH_state_v2.jl")
+#using LinearAlgebra
 module HaldaneSphere
 include("FQH_state_v2.jl")
 include("Misc.jl")
@@ -43,7 +43,7 @@ function wignerd(theta, j, m1, m2)
     if !(j >= 0 && isinteger(2j))
         throw(ArgumentError("j must be integer or half-integer ≥ 0"))
     end
-    if !(isinteger(m1) && isinteger(m2))
+    if !(isinteger(2m1) && isinteger(2m2))
         throw(ArgumentError("m1 and m2 must be integer or half-integer"))
     end
     if abs(m1) > j || abs(m2) > j
