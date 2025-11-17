@@ -127,7 +127,7 @@ function one_particle_state_coef(θ::Float64,ϕ::Float64,S2::Int; normalize=fals
 	v = sin(θ/2) * exp(0.5im * ϕ)
 	ret = map(i-> u^(S2-i) * v^i / sphere_coef(S2/2.0, S2/2.0 -i), 0:S2)
 	if normalize
-		ret./ = ret' * ret
+		ret./= ret' * ret
 	end
 	return ret
 end
