@@ -137,8 +137,8 @@ function one_particle_state_coef(m::Int,θ::Float64,ϕ::Float64,S2::Int;normaliz
 	ret = [wignerd(θ,S,k,-S+m) for k in -S:S]
 	if ϕ ≈ π
 		ret .*= -1
-	elseif ϕ !≈ 0
-		ret .*= exp.(-1im .* (-S:S))
+	elseif !(ϕ ≈ 0)
+		ret = ret.*exp.(1im*ϕ .* (-S:S))
 	end
 	if normalize
 		ret ./= ret' * ret
