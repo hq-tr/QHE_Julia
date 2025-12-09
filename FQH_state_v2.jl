@@ -293,13 +293,27 @@ LinearAlgebra.:⋅(vec1::AbstractFQH_state, vec2::AbstractFQH_state) = overlap(v
 # -------- Projection
 function projection(vec::AbstractFQH_state,basis::Vector{BitVector})
     # Project the given <vec> to the space spanned by <basis>
-    coefs = map(term -> vec.coef[findfirst(v->v==term, vec.basis)], basis)
+    coefs = map(term -> begin
+        termindex = findfirst(v->v==term, vec.basis)
+        if termindex != nothing
+            vec.coef[termindex]
+        else
+            0.0
+        end
+        end, basis)
     return FQH_state(basis,coefs)
 end
 
 function projection_coefficients(vec::AbstractFQH_state,basis::Vector{BitVector})
     # Project the given <vec> to the space spanned by <basis> (get coefficients only)
-    coefs = map(term -> vec.coef[findfirst(v->v==term, vec.basis)], basis)
+    coefs = map(term -> begin
+        termindex = findfirst(v->v==term, vec.basis)
+        if termindex != nothing
+            vec.coef[termindex]
+        else
+            0.0
+        end
+        end, basis)
     return coefs
 end
 
