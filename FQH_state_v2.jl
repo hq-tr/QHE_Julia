@@ -297,6 +297,12 @@ function projection(vec::AbstractFQH_state,basis::Vector{BitVector})
     return FQH_state(basis,coefs)
 end
 
+function projection_coefficients(vec::AbstractFQH_state,basis::Vector{BitVector})
+    # Project the given <vec> to the space spanned by <basis> (get coefficients only)
+    coefs = map(term -> vec.coef[findfirst(v->v==term, vec.basis)], basis)
+    return coefs
+end
+
 # -------- Angular Momentum
 
 function get_Lz(vec::AbstractFQH_state)
@@ -383,7 +389,7 @@ export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!,
     wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, 
     disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, 
     get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere, 
-    check_Lz_eigenstate,projection
+    check_Lz_eigenstate,projection,projection_coefficients
 
 
 end # ----- END MODULE
