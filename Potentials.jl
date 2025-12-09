@@ -224,7 +224,7 @@ function density_matrix(basis_list::Vector{BitVector}, single_particle_function:
 end
 
 
-function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Float64, ϕ::Float64, height=1.0,shift=0.0;verbose=false)
+function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Real, ϕ::Real, height=1.0,shift=0.0;verbose=false)
     No = length(basis_list[1])
     coef = one_particle_state(θ,ϕ,No-1).coef
     C  = coef * coef'
@@ -268,6 +268,7 @@ function sphere_bump_matrix(basis_list::Vector{BitVector},θ::Vector{Float64}, �
     return mat
 end 
 
+# The following function only works if the bump is at the north or south pole
 function sphere_wide_bump_matrix(basis_list::Vector{BitVector},k::Int=2, height::Float64=1.0,shift::Float64=0.0,location::Symbol=:north)
     No = length(basis_list[1])
     dim = length(basis_list)
@@ -286,6 +287,59 @@ function sphere_wide_bump_matrix(basis_list::Vector{BitVector},k::Int=2, height:
         gen_onebody_element_diagonal!(mat, i, basis_list[i], C, height)
     end
     if !iszero(shift) mat += shift * sparse(I, dim, dim) end
+    return mat
+end 
+
+
+# This function calculate the matrix for one wide bump consisting of k orbital located at (θ,ϕ)
+function sphere_wide_bump_matrix(basis_list::Vector{BitVector},k::Int, θ::Real, ϕ::Real,height::Float64=1.0,shift::Float64=0.0;verbose=false)
+    No = length(basis_list[1])
+    C = zeros(ComplexF64,(No,No)) # one-particle basis matrix
+    for kk in 0:(k-1) # sum over orbitals 0,1,2,..,k-1
+        coef = one_particle_state_coef(kk,θ,ϕ,No-1;normalize=true)
+        C   += coef * coef'
+    end
+
+    dim = length(basis_list)
+    mat = spzeros(Complex{Float64},(dim,dim))
+    for i in 1:dim
+        if verbose && ((i-1)%(dim÷100) == 0)
+            print("\rProgress: $(i÷(dim÷100))%\t\t")
+        end
+        for j in i:dim
+            gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
+        end
+    end
+    if shift!=0 mat += shift * sparse(I, dim, dim) end
+    return mat
+end 
+
+# This function calculate the matrix for multiple wide bumps, each consisting of k orbital.
+function sphere_wide_bump_matrix(basis_list::Vector{BitVector},k::Int, θ::Vector{T} where T<:Real, ϕ::Vector{T} where T<:Real,height::Float64=1.0,shift::Float64=0.0;verbose=false)
+    No = length(basis_list[1])
+
+    dim = length(basis_list)
+    mat = spzeros(Complex{Float64},(dim,dim))
+
+    C = zeros(ComplexF64,(No,No)) # one-particle basis matrix
+    for kk in 0:(k-1) # sum over orbitals 0,1,2,..,k-1
+        C += sum(i->begin 
+            coef = one_particle_state_coef(kk,θ[i],ϕ[i],No-1;normalize=true)
+            coef * coef'
+            end,1:length(θ))
+    end
+
+    for i in 1:dim
+        if verbose && ((i-1)%(dim÷100) == 0)
+            print("\rProgress: $(i÷(dim÷100))%\t\t")
+        end
+        for j in i:dim
+            gen_onebody_element!(mat, i, j, basis_list[i], basis_list[j], C, height)
+        end
+    end
+
+
+    if shift!=0 mat += shift * sparse(I, dim, dim) end
     return mat
 end 
 
