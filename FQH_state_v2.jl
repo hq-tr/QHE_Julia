@@ -17,13 +17,17 @@ abstract type  AbstractFQH_state end
 
 struct FQH_state <: AbstractFQH_state
     basis::Vector{BitVector}
-    coef::Vector{Number}
+    coef::Vector{T} where T<:Number
+    FQH_state(basis::Vector{BitVector},coef::Vector{T} where T<:Number) = new(basis,coef)
+    FQH_state(basis::Vector{Int64},coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
 end
 
 
 mutable struct FQH_state_mutable <: AbstractFQH_state
     basis::Vector{BitVector}
     coef::Vector{Number}
+    FQH_state_mutable(basis::Vector{BitVector},coef::Vector{T} where T<:Number) = new(basis,coef)
+    FQH_state_mutable(basis::Vector{Int64},coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
 end
 
 
@@ -182,17 +186,17 @@ function printwf(state::AbstractFQH_state; fname="", format=:BIN)
 end
 function display(vec::AbstractFQH_state) printwf(vec) end
 
-function readwf(fname::String; mutable=false)
+function readwf(fname::String; mutable=false,verbose=true)
         f = open(fname)
         content = readlines(f)
         dim = parse(Int64, content[1])
         basis = [BitVector(map(x->parse(Bool, x), split(y,""))) for y in content[2:2:end]]
         #println(basis[1])
-        println("The dimension is $dim")
+        if verbose println("The dimension is $dim") end
         try
             global co = [parse(Float64, x) for x in content[3:2:end]]
         catch ArgumentError
-            println("Reading coefficients as complex numbers")
+            if verbose println("Reading coefficients as complex numbers") end
             global co = [parse(Complex{Float64}, x) for x in content[3:2:end]]
         finally
             close(f)
@@ -205,17 +209,17 @@ function readwf(fname::String; mutable=false)
         end
 end
 
-function readwfdecimal(fname::String, N_o::Int; mutable=false)
+function readwfdecimal(fname::String, N_o::Int; mutable=false,verbose=true)
         f = open(fname)
         content = readlines(f)
         dim = parse(Int64, content[1])
         basis = [dec2bin(y,N_o) for y in content[2:2:end]]
         #println(basis[1])
-        println("The dimension is $dim")
+        if verbose println("The dimension is $dim") end
         try
             global co = [parse(Float64, x) for x in content[3:2:end]]
         catch ArgumentError
-            println("Reading coefficients as complex numbers")
+            if verbose println("Reading coefficients as complex numbers") end
             global co = [parse(Complex{Float64}, x) for x in content[3:2:end]]
         finally
             close(f)
