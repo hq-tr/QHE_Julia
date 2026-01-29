@@ -5,7 +5,7 @@ bin2dex(config::BitVector) = findall(config) .- 1
 
 dex2bin(state::Vector{Int}, N_orb::Int) = BitVector([i-1 in state for i in 1:N_orb]) 
 
-function dec2bin(num::Int, N_orb::Int)
+function dec2bin(num::Integer, N_orb::Int)
 	rawbin = BitVector(digits(num,base=2))
 	for i in 1:(N_orb-length(rawbin))
 		push!(rawbin,0)
@@ -13,7 +13,7 @@ function dec2bin(num::Int, N_orb::Int)
 	return rawbin
 end
 
-function dec2binreverse(num::Int, N_orb::Int)
+function dec2binreverse(num::Integer, N_orb::Int)
 	rawbin = BitVector(digits(num,base=2))
 	for i in 1:(N_orb-length(rawbin))
 		push!(rawbin,0)
