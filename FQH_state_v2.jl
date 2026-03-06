@@ -232,6 +232,32 @@ function readwfdecimal(fname::String, N_o::Int; mutable=false,verbose=true)
         end
 end
 
+function readwf(basisname::String, coefname::String, n_orb::Integer;mutable=false,reverse=false)
+    open(basisname) do f
+        global bases = reverse ? [dec2binreverse(parse(Int,basis),n_orb) for basis in readlines(f)] : [dec2bin(parse(Int,basis),n_orb) for basis in readlines(f)]
+    end
+    open(coefname) do f
+        lines = readlines(f)
+        try
+            global coefs = [parse(Float64,coef) for coef in lines]
+        catch ArgumentError
+            println("Reading coefficients as complex numbers")
+            global coefs = [parse(Complex{Float64},coef) for coef in lines]
+        end
+    end
+    if length(bases) == length(coefs)
+        if mutable
+            return FQH_state_mutable(bases,coefs)
+        else
+            return FQH_state(bases,coefs)
+        end
+    else
+        println("WARNING: the two input files exist, but they have different lengths.")
+        println("Therefore, a zero vector will be created.")
+        return mutable ? FQH_state_mutable() : FQH_state()
+    end
+end
+
 readwfdec = readwfdecimal
 
 #------------- COLLATE VECTORS WITH DIFFERENT BASIS
