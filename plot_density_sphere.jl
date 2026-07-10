@@ -17,6 +17,7 @@ function main()
     @argumentflag lineplot "--line"
     @argumentoptional String outputname "-O" "--output"
     @argumentflag normalize "-N" "--normalize"
+    @argumentflag orbital_density "--orbital"
 end
 
 if basisname == nothing
@@ -54,7 +55,28 @@ if normalize
     println("--------------")
 end
 
-if lineplot
+if orbital_density
+    density = zeros(No)
+    for (b,c) in zip(state.basis,state.coef)
+        density .+= b.*abs2.(c)
+    end
+
+    # Save density data
+    if outputname == nothing
+        outputname = "$(fname)_density_sphere_orbital"
+    end
+    open("$(outputname).dat", "w") do f
+        for (datax,datay) in enumerate(density)
+            write(f,"$(datax-1)\t$(datay)\n")
+        end
+    end
+
+    # Plot
+    p = plot(density,markershape=:xcross,linestyle=:dash)
+    xlabel!("Orbital number")
+    ylabel!("Density")
+    savefig("$(outputname).svg")
+elseif lineplot
     # Create the plot range
     θ = LinRange(0,π,200)
     if !check_Lz_eigenstate(state)

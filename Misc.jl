@@ -1,5 +1,11 @@
 module MiscRoutine
 
+# Convert binary string to BitVector (e.g. "1001" to BitVector([1,0,0,1]))
+function string2bit(config::String)
+	config_filter = [c for c in collect(config) if c in ['0','1']] # Filter only the binary characters
+	return BitVector([c=='1' for c in config_filter])
+end
+
 # Basis format conversions
 bin2dex(config::BitVector) = findall(config) .- 1
 
@@ -34,6 +40,30 @@ findLz(root::BitVector) = sum(root .* collect(0:1:length(root)-1))
 
 findLzsphere(root::BitVector, S::Float64) = sum(root .* collect(-S:1:S))
 
+function findLz(State::Int64,S::Real)
+    Lz = 0
+    while State != 0
+        lowest_one = State & -State        # get the lowest "1" bit
+        position = floor(Int, log2(lowest_one))
+        Lz += -position+S
+        State &= State - 1                # clear the lowest "1" bit
+    end
+    return Lz
+end
+
+function findLz(State::Int64)
+    Lz = 0
+    while State != 0
+        lowest_one = State & -State        # get the lowest "1" bit
+        position = floor(Int, log2(lowest_one))
+        Lz += -position
+        State &= State - 1                # clear the lowest "1" bit
+    end
+    return Lz
+end
+
+findLZ = findLz
+
 function findLzsphere(root::BitVector)
 	S = (length(BitVector)-1.)/2.
 	return findLzsphere(root)
@@ -49,5 +79,5 @@ sqfactorial(n,N) = prod(map(sqrt, n:N))
 # Miscellaneous function for the torus
 get_k_vector(m::Int,Nx::Int,Ny::Int) = (m÷Nx)/Nx,(m%Nx)/Ny # These are actually coefficients [m₁,m₂] such that k = m₁b₁+m₂b₂
 
-export bin2dex, sqfactorial, dex2bin, findLz, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
+export string2bit,bin2dex, sqfactorial, dex2bin, findLz,findLZ, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
 end

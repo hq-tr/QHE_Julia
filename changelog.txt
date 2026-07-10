@@ -1,14 +1,25 @@
+========== 2026-07-11 ==========
+ - Updated plot_density_sphere.jl to a version with more functionality (normalization on different geometries, plot orbital density, etc.)
+ - Updated HilbertSpace.jl to work for decimal format, and also to generate a basis squeezed from a given root
+ - Updated FQH_state_v2.jl to allow initializing a zero vector given only the basis
+ - Updated FQH_state_v2.jl to read and write files in decimal format (done a while ago)
+
 ========== 2025-10-03 ==========
  - Started work on FCI.jl
+
 ========== 2024-01-12 ==========
  - Changed the algorithm of MiscRoutine.bin2dex() into a more efficient one.
  - Added an alternate method in bilayer density to allow applying one-body potential to each layer separately
+
 ========== 2023-12-25 ==========
  - Added in HilbertSpace.jl a function to generate bilayer basis.
+
 =========== 2023-12-14 ==========
  - Added FQH_bilayer.jl library. This library is specifically designed to handle bilayer stage with color-flux attachment.
+
 =========== 2023-12-14 ==========
  - Added FQH_bilayer.jl library. This library is specifically designed to handle bilayer stage with color-flux attachment.
+
 =========== 2023-10-20 ==========
  - In FQH_states_v2.jl added a function to print vector with basis in decimal format
  
