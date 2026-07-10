@@ -18,6 +18,7 @@ abstract type  AbstractFQH_state end
 struct FQH_state <: AbstractFQH_state
     basis::Vector{BitVector}
     coef::Vector{T} where T<:Number
+    FQH_state(basis::Vector{BitVector}) = new(basis,zeros(length(basis)))
     FQH_state(basis::Vector{BitVector},coef::Vector{T} where T<:Number) = new(basis,coef)
     FQH_state(basis::Vector{T}where T<:Integer,coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
 end
@@ -26,6 +27,7 @@ end
 mutable struct FQH_state_mutable <: AbstractFQH_state
     basis::Vector{BitVector}
     coef::Vector{Number}
+    FQH_state(basis::Vector{BitVector}) = new(basis,zeros(length(basis)))
     FQH_state_mutable(basis::Vector{BitVector},coef::Vector{T} where T<:Number) = new(basis,coef)
     FQH_state_mutable(basis::Vector{T}where T<:Integer,coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
 end
