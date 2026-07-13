@@ -22,6 +22,7 @@ struct FQH_state <: AbstractFQH_state
     FQH_state(basis::Vector{BitVector}) = new(basis,zeros(length(basis))) # Only basis in binary format
     FQH_state(basis::Vector{T}where T<:Integer,coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
     FQH_state(basis::Vector{T} where T<:Integer,No::Int64) = new(basis,zeros(length(basis)),No) # Only basis in decimal format
+    FQH_state() = new(BitVector[],Float64[]) # empty state
 end
 
 
@@ -32,6 +33,7 @@ mutable struct FQH_state_mutable <: AbstractFQH_state
     FQH_state_mutable(basis::Vector{BitVector}) = new(basis,zeros(length(basis)))
     FQH_state_mutable(basis::Vector{T}where T<:Integer,coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
     FQH_state_mutable(basis::Vector{T} where T<:Integer,No::Int64) = new(basis,zeros(length(basis)),No) # Only basis in decimal format
+    FQH_state() = new(BitVector[],Float64[]) # empty state
 end
 
 
@@ -132,8 +134,6 @@ function disk_normalize!(vec::FQH_state_mutable)
     vec.coef /= norm(new_coef)
     return
 end
-
-
 
 
 # ------------I/O
@@ -432,12 +432,43 @@ function get_density_sphere(vec::FQH_state, θ::Array{T} where T<: Number, ϕ::A
     return den
 end
 
+# ------------ Other manipulation
+function append_basis(vec::FQH_state,config::BitVector;position=:left)
+    if position==:left
+        new_basis = [vcat(config,b) for b in vec.basis]
+    elseif position==:right
+        new_basis = [vcat(b,config) for b in vec.basis]
+    else
+        println("Position keyword not recognized.")
+        return FQH_state()
+    end
+    return FQH_state(new_basis,vec.coef)
+end
+
+append_basis(vec::FQH_state,config::String) = append_basis(vec,string2bit(config))
+
+function append_basis!(vec::FQH_state_mutable,config::BitVector;position=:left)
+    if position==:left
+        new_basis = [vcat(config,b) for b in vec.basis]
+    elseif position==:right
+        new_basis = [vcat(b,config) for b in vec.basis]
+    else
+        println("Position keyword not recognized.")
+        return
+    end
+    vec.basis = new_basis
+    return
+end
+
+append_basis!(vec::FQH_state_mutable,config::String) = append_basis!(vec,string2bit(config))
+
+
 export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
     invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, collapse!, 
     wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, 
     disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, 
     get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere, 
-    check_Lz_eigenstate,projection,projection_coefficients
+    check_Lz_eigenstate,projection,projection_coefficients,append_basis,append_basis!
 
 
 end # ----- END MODULE

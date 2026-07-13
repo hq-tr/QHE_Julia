@@ -6,6 +6,10 @@ function string2bit(config::String)
 	return BitVector([c=='1' for c in config_filter])
 end
 
+function bit2string(config::BitVector)
+	return replace(replace(join(config),("true"=>"1")),("false"=>"0"))
+end
+
 # Basis format conversions
 bin2dex(config::BitVector) = findall(config) .- 1
 
@@ -79,5 +83,5 @@ sqfactorial(n,N) = prod(map(sqrt, n:N))
 # Miscellaneous function for the torus
 get_k_vector(m::Int,Nx::Int,Ny::Int) = (m÷Nx)/Nx,(m%Nx)/Ny # These are actually coefficients [m₁,m₂] such that k = m₁b₁+m₂b₂
 
-export string2bit,bin2dex, sqfactorial, dex2bin, findLz,findLZ, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
+export string2bit,bit2string,bin2dex, sqfactorial, dex2bin, findLz,findLZ, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
 end
