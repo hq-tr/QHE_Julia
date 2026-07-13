@@ -266,15 +266,31 @@ readwfdec = readwfdecimal
 
 #------------- COLLATE VECTORS WITH DIFFERENT BASIS
 # (Useful for subsequent operations)
-function collate_vector(vec1::AbstractFQH_state, vec2::AbstractFQH_state)
+function collate_vector(vec1::AbstractFQH_state, vec2::AbstractFQH_state;coefficients_only=false)
     new_basis = collect(Set(vec1.basis) ∪ Set(vec2.basis))
     dict1 = state2dict(vec1)
     dict2 = state2dict(vec2)
     new_coef1 = map(x -> (try dict1[x] catch KeyError 0 end), new_basis)
     new_coef2 = map(x -> (try dict2[x] catch KeyError 0 end), new_basis)
-    return FQH_state(new_basis, new_coef1), FQH_state(new_basis, new_coef2)
+    if coefficients_only
+        return new_coef1, new_coef2
+    else
+        return FQH_state(new_basis, new_coef1), FQH_state(new_basis, new_coef2)
+    end
 end
 
+function intersect_basis(vec1::AbstractFQH_state, vec2::AbstractFQH_state;coefficients_only=false)
+    new_basis = collect(Set(vec1.basis) ∩ Set(vec2.basis))
+    dict1 = state2dict(vec1)
+    dict2 = state2dict(vec2)
+    new_coef1 = map(x -> (try dict1[x] catch KeyError 0 end), new_basis)
+    new_coef2 = map(x -> (try dict2[x] catch KeyError 0 end), new_basis)
+    if coefficients_only
+        return new_coef1, new_coef2
+    else
+        return FQH_state(new_basis, new_coef1), FQH_state(new_basis, new_coef2)
+    end
+end
 
 function collate_many_vectors(vectors::Vector{T} where T<:AbstractFQH_state;separate_out=false, collumn_vector=false)
     if separate_out
@@ -318,6 +334,11 @@ end
 Base.:*(multiplier::Number, vec1::AbstractFQH_state) = vec1*multiplier
 
 function overlap(vec1::AbstractFQH_state, vec2::AbstractFQH_state) # Inner product
+    v1, v2 = intersect_basis(vec1, vec2;coefficients_only=true)
+    return v1⋅v2
+end
+
+function overlap_old_method(vec1::AbstractFQH_state, vec2::AbstractFQH_state) # Inner product
     v1, v2 = collate_vector(vec1, vec2)
     return v1.coef⋅v2.coef
 end
@@ -468,7 +489,7 @@ export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!,
     wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, 
     disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, 
     get_density_sphere, overlap, +, *, ⋅, collate_many_vectors, display, get_Lz, get_Lz_sphere, 
-    check_Lz_eigenstate,projection,projection_coefficients,append_basis,append_basis!
+    check_Lz_eigenstate,projection,projection_coefficients,append_basis,append_basis!, overlap_old_method
 
 
 end # ----- END MODULE
