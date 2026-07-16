@@ -142,5 +142,17 @@ function LECspace(N_el::Int, N_orb::Int, L_z::Int, conditions::Vector{LECType}) 
     return [vec for vec in fullspace if any(checkLEC(vec, condition) for condition in conditions)]
 end
 
-export fullhilbertspace, LECspace, LECType,bilayerhilbertspace,squeezedhilbertspace
+# ========= Admissibility
+function isadmissible(partition::BitVector, k::Integer, r::Integer)
+    check = true
+    for i in 1:(length(partition)-r+1)
+        if count(partition[i:(i+r-1)]) > k
+            check=false
+            break
+        end
+    end
+    return check
+end
+
+export fullhilbertspace, LECspace, LECType,bilayerhilbertspace,squeezedhilbertspace, isadmissible
 end
