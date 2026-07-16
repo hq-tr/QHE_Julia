@@ -372,7 +372,7 @@ function projection_coefficients(vec::AbstractFQH_state,basis::Vector{BitVector}
     return coefs
 end
 
-function monomial_coefficients(vec::AbstractFQH_state,basis::BitVector)
+function monomial_coefficient(vec::AbstractFQH_state,basis::BitVector)
     i = findfirst(==(basis),vec.basis)
     if i == nothing
         return 0.
