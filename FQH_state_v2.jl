@@ -236,7 +236,7 @@ function readwfdecimal(fname::String, N_o::Int; mutable=false,verbose=true)
         end
 end
 
-function readwf(basisname::String, coefname::String, n_orb::Integer;mutable=false,reverse=false)
+function readwf(basisname::String, coefname::String, n_orb::Integer;mutable=false,reverse=false,verbose=true)
     open(basisname) do f
         global bases = reverse ? [dec2binreverse(parse(Int,basis),n_orb) for basis in readlines(f)] : [dec2bin(parse(Int,basis),n_orb) for basis in readlines(f)]
     end
@@ -245,7 +245,9 @@ function readwf(basisname::String, coefname::String, n_orb::Integer;mutable=fals
         try
             global coefs = [parse(Float64,coef) for coef in lines]
         catch ArgumentError
-            println("Reading coefficients as complex numbers")
+            if verbose
+                println("Reading coefficients as complex numbers")
+            end
             global coefs = [parse(Complex{Float64},coef) for coef in lines]
         end
     end
@@ -492,6 +494,34 @@ end
 
 append_basis!(vec::FQH_state_mutable,config::String) = append_basis!(vec,string2bit(config))
 
+function add_electron(b::BitVector,pos::Int)
+    ret = copy(b)
+    ret[pos] = true
+    return ret
+end
+
+function add_electron!(b::BitVector,pos::Int)
+    b[pos] = true
+end
+
+function add_electron(b::BitVector,pos::Vector{Int})
+    ret = copy(b)
+    for p in pos
+        ret[p] = true
+    end
+    return ret
+end
+
+function add_electron!(b::BitVector,pos::Vector{Int})
+    for p in pos
+        b[p] = true
+    end
+end
+
+function add_electron(vec::AbstractFQH_state,pos)
+    new_basis = [add_electron(b,pos) for b in vec.basis]
+    return FQH_state(new_basis,vec.coef)
+end
 
 export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
     invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, collapse!, 
@@ -499,7 +529,6 @@ export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!,
     disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, 
     get_density_sphere, overlap, +, *, ⋅, collate_vector,collate_many_vectors, display, get_Lz, get_Lz_sphere, 
     check_Lz_eigenstate,projection,projection_coefficients,monomial_coefficient,
-    append_basis,append_basis!, overlap_old_method
-
+    append_basis,append_basis!, overlap_old_method, add_electron, add_electron!
 
 end # ----- END MODULE
