@@ -35,6 +35,10 @@ function dec2bin(num::String,N_orb::Int)
 	return dec2bin(parse(Int,num), N_orb)
 end
 
+function dec2binreverse(num::String,N_orb::Int)
+	return dec2binreverse(parse(Int,num),N_orb)
+end
+
 # Normalization coefficient on the sphere
 sphere_coef(S,m) =   sqfactorial(S-m)/sqfactorial(S+m+1, 2S+1)
 

@@ -190,7 +190,7 @@ function printwf(state::AbstractFQH_state; fname="", format=:BIN)
 end
 function display(vec::AbstractFQH_state) printwf(vec) end
 
-function readwf(fname::String; mutable=false,verbose=true)
+function readwf(fname::String; mutable=false,reverse=false,verbose=true)
         f = open(fname)
         content = readlines(f)
         dim = parse(Int64, content[1])
@@ -213,11 +213,15 @@ function readwf(fname::String; mutable=false,verbose=true)
         end
 end
 
-function readwfdecimal(fname::String, N_o::Int; mutable=false,verbose=true)
+function readwfdecimal(fname::String, N_o::Int; mutable=false,reverse=false,verbose=true)
         f = open(fname)
         content = readlines(f)
         dim = parse(Int64, content[1])
-        basis = [dec2bin(y,N_o) for y in content[2:2:end]]
+        if reverse
+            basis = [dec2binreverse(y,N_o) for y in content[2:2:end]]
+        else
+            basis = [dec2bin(y,N_o) for y in content[2:2:end]]
+        end
         #println(basis[1])
         if verbose println("The dimension is $dim") end
         try
