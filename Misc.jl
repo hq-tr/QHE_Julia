@@ -73,8 +73,8 @@ end
 findLZ = findLz
 
 function findLzsphere(root::BitVector)
-	S = (length(BitVector)-1.)/2.
-	return findLzsphere(root)
+	S = (length(root)-1.)/2.
+	return findLzsphere(root,S)
 end
 
 sqfactorial(N) = prod(map(sqrt, 1:N)) 

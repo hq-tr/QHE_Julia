@@ -116,6 +116,22 @@ function disk_normalize(vec::FQH_state)
     return FQH_state(vec.basis, new_coef)
 end
 
+function sphere2poly(vec::FQH_state)
+    S = (countorbital(vec)-1.)/2.
+    multiplier = [prod([1/sphere_coef(S,S-m) for m in bin2dex(config)]) for config in vec.basis]
+    new_coef = vec.coef.*multiplier
+    new_coef /= norm(new_coef)
+    return FQH_state(vec.basis, new_coef)
+end
+
+function disk2poly(vec::FQH_state)
+    S = (countorbital(vec)-1.)/2.
+    multiplier = [prod([sqrt(2^m)/sqfactorial(m) for m in bin2dex(config)]) for config in vec.basis]
+    new_coef = vec.coef.*multiplier
+    new_coef /= norm(new_coef)
+    return FQH_state(vec.basis, new_coef)
+end
+
 function wfnormalize!(vec::FQH_state_mutable)
     vec.coef /= wfnorm(vec)
 end
@@ -130,6 +146,21 @@ end
 
 function disk_normalize!(vec::FQH_state_mutable)
     multiplier = [prod([sqfactorial(m)/sqrt(2^m) for m in bin2dex(config)]) for config in vec.basis]
+    vec.coef .*= multiplier
+    vec.coef /= norm(new_coef)
+    return
+end
+
+function sphere2poly!(vec::FQH_state_mutable)
+    S = (countorbital(vec)-1.)/2.
+    multiplier = [prod([1/sphere_coef(S,S-m) for m in bin2dex(config)]) for config in vec.basis]
+    vec.coef .*= multiplier
+    vec.coef /= norm(vec.coef)
+    return
+end
+
+function disk2poly!(vec::FQH_state_mutable)
+    multiplier = [sqrt(2^m)/prod([sqfactorial(m) for m in bin2dex(config)]) for config in vec.basis]
     vec.coef .*= multiplier
     vec.coef /= norm(new_coef)
     return
@@ -268,6 +299,13 @@ function readwf(basisname::String, coefname::String, n_orb::Integer;mutable=fals
     end
 end
 
+function readbasis(basisname::String,n_orb::Integer;mutable=false,reverse=false,verbose=true)
+    open(basisname) do f
+        global bases = reverse ? [dec2binreverse(parse(Int,basis),n_orb) for basis in readlines(f)] : [dec2bin(parse(Int,basis),n_orb) for basis in readlines(f)]
+    end
+    return mutable ? FQH_state_mutable(bases) : FQH_state(bases)
+end
+
 readwfdec = readwfdecimal
 
 #------------- COLLATE VECTORS WITH DIFFERENT BASIS
@@ -333,6 +371,11 @@ function Base.:+(vec1::AbstractFQH_state, vec2::AbstractFQH_state) # Addition
     return FQH_state(v1.basis, v1.coef+v2.coef)
 end
 
+function Base.:-(vec1::AbstractFQH_state, vec2::AbstractFQH_state) # Addition
+    v1,v2 = collate_vector(vec1, vec2)
+    return FQH_state(v1.basis, v1.coef-v2.coef)
+end
+
 function Base.:*(vec1::AbstractFQH_state, multiplier::Number) # Scalar multiplication
     return FQH_state(vec1.basis, multiplier * vec1.coef)
 end
@@ -385,6 +428,12 @@ function monomial_coefficient(vec::AbstractFQH_state,basis::BitVector)
     else
         return vec.coef[i]
     end
+end
+
+function project_out(vec1::AbstractFQH_state,vec2::AbstractFQH_state)
+    coefs2 = projection_coefficients(vec2,vec1.basis)
+    coef_projected = vec1.coef - vec1.coef⋅coefs2
+    return FQH_state(vec1.basis,coef_projected)
 end
 
 # -------- Angular Momentum
@@ -469,7 +518,18 @@ function get_density_sphere(vec::FQH_state, θ::Array{T} where T<: Number, ϕ::A
 end
 
 # ------------ Other manipulation
-function append_basis(vec::FQH_state,config::BitVector;position=:left)
+function append_basis(vec::FQH_state,config::BitVector;position=:left,renormalize=:none)
+    @assert(position in [:left,:right])
+    @assert(renormalize in [:none,:sphere,:disk])
+    # prepare new coefficients
+    if renormalize == :sphere
+        new_coef = sphere2poly(vec).coef
+    elseif renormalize == :disk
+        new_coef = disk2poly(vec).coef
+    else
+        new_coef = vec.coef
+    end
+    # get new basis
     if position==:left
         new_basis = [vcat(config,b) for b in vec.basis]
     elseif position==:right
@@ -478,10 +538,18 @@ function append_basis(vec::FQH_state,config::BitVector;position=:left)
         println("Position keyword not recognized.")
         return FQH_state()
     end
-    return FQH_state(new_basis,vec.coef)
+    # prepare new state
+    if renormalize == :sphere
+        new_state = sphere_normalize(FQH_state(new_basis,new_coef))
+    elseif renormalize == :disk
+        new_state = disk_normalize(FQH_state(new_basis,new_coef))
+    else
+        new_state = FQH_state(new_basis,new_coef)
+    end
+    return new_state 
 end
 
-append_basis(vec::FQH_state,config::String) = append_basis(vec,string2bit(config))
+append_basis(vec::FQH_state,config::String;position=:left,renormalize=:none) = append_basis(vec,string2bit(config);position=position,renormalize=renormalize)
 
 function append_basis!(vec::FQH_state_mutable,config::BitVector;position=:left)
     if position==:left
@@ -528,11 +596,11 @@ function add_electron(vec::AbstractFQH_state,pos)
 end
 
 export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
-    invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, collapse!, 
-    wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere_normalize!, 
-    disk_normalize!, wfnormalize!, getLz, getLzsphere,dim, get_density_disk, 
-    get_density_sphere, overlap, +, *, ⋅, collate_vector,collate_many_vectors, display, get_Lz, get_Lz_sphere, 
-    check_Lz_eigenstate,projection,projection_coefficients,monomial_coefficient,
+    invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, readbasis, collapse!, 
+    wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere2poly, disk2poly,
+    sphere_normalize!, disk_normalize!, wfnormalize!, sphere2poly!,disk2poly!,getLz, getLzsphere,dim, get_density_disk, 
+    get_density_sphere, overlap, +, -, *, ⋅, collate_vector,collate_many_vectors, display, get_Lz, get_Lz_sphere, 
+    check_Lz_eigenstate,projection,projection_coefficients,monomial_coefficient,project_out,
     append_basis,append_basis!, overlap_old_method, add_electron, add_electron!
 
 end # ----- END MODULE
