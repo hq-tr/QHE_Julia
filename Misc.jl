@@ -46,6 +46,9 @@ bin2dec(config::BitVector) = sum(2 .^ bin2dex(config))
 
 bin2dec(config::String) = bin2dec(string2bit(config))
 
+# Convert between dec and index
+dec2dex(n::Integer) = [i-1 for (i,d) in enumerate(digits(n,base=2)) if d==1]
+
 
 # Normalization coefficient on the sphere
 sphere_coef(S,m) =   sqfactorial(S-m)/sqfactorial(S+m+1, 2S+1)
@@ -95,5 +98,5 @@ sqfactorial(n,N) = prod(map(sqrt, n:N))
 # Miscellaneous function for the torus
 get_k_vector(m::Int,Nx::Int,Ny::Int) = (m÷Nx)/Nx,(m%Nx)/Ny # These are actually coefficients [m₁,m₂] such that k = m₁b₁+m₂b₂
 
-export string2bit,bit2string,bin2dex, sqfactorial, dex2bin,bin2dec, findLz,findLZ, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
+export string2bit,bit2string,bin2dex, sqfactorial, dex2bin,bin2dec, findLz,findLZ, findLzsphere, sphere_coef, dec2bin,dec2dex, dec2binreverse,get_k_vector
 end

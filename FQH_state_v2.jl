@@ -308,6 +308,16 @@ end
 
 readwfdec = readwfdecimal
 
+function decimalbasis(vec::AbstractFQH_state;sortorder=:none)
+    ret = [bin2dec(b) for b in vec.basis]
+    if sortorder in [:descending,:descend]
+        sort!(ret,rev=true)
+    elseif sortorder in [:ascending,:ascend]
+        sort!(ret)
+    end
+    return ret
+end
+
 #------------- COLLATE VECTORS WITH DIFFERENT BASIS
 # (Useful for subsequent operations)
 function collate_vector(vec1::AbstractFQH_state, vec2::AbstractFQH_state;coefficients_only=false)
@@ -601,6 +611,6 @@ export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!,
     sphere_normalize!, disk_normalize!, wfnormalize!, sphere2poly!,disk2poly!,getLz, getLzsphere,dim, get_density_disk, 
     get_density_sphere, overlap, +, -, *, ⋅, collate_vector,collate_many_vectors, display, get_Lz, get_Lz_sphere, 
     check_Lz_eigenstate,projection,projection_coefficients,monomial_coefficient,project_out,
-    append_basis,append_basis!, overlap_old_method, add_electron, add_electron!
+    append_basis,append_basis!, overlap_old_method, add_electron, add_electron!, decimalbasis
 
 end # ----- END MODULE
