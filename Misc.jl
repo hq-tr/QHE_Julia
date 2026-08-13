@@ -1,5 +1,6 @@
 module MiscRoutine
 
+# Basis format conversions
 # Convert binary string to BitVector (e.g. "1001" to BitVector([1,0,0,1]))
 function string2bit(config::String)
 	config_filter = [c for c in collect(config) if c in ['0','1']] # Filter only the binary characters
@@ -10,11 +11,13 @@ function bit2string(config::BitVector)
 	return replace(replace(join(config),("true"=>"1")),("false"=>"0"))
 end
 
-# Basis format conversions
+# Convert between bin (e.g. BitVector([1,0,0,1])) and index (e.g. [0,3])
 bin2dex(config::BitVector) = findall(config) .- 1
 
 dex2bin(state::Vector{Int}, N_orb::Int) = BitVector([i-1 in state for i in 1:N_orb]) 
 
+
+# Convert between bin (e.g. BitVector([1,0,0,1])) and decimal (e.g. 9)
 function dec2bin(num::Integer, N_orb::Int)
 	rawbin = BitVector(digits(num,base=2))
 	for i in 1:(N_orb-length(rawbin))
@@ -38,6 +41,11 @@ end
 function dec2binreverse(num::String,N_orb::Int)
 	return dec2binreverse(parse(Int,num),N_orb)
 end
+
+bin2dec(config::BitVector) = sum(2 .^ bin2dex(config))
+
+bin2dec(config::String) = bin2dec(string2bit(config))
+
 
 # Normalization coefficient on the sphere
 sphere_coef(S,m) =   sqfactorial(S-m)/sqfactorial(S+m+1, 2S+1)
@@ -87,5 +95,5 @@ sqfactorial(n,N) = prod(map(sqrt, n:N))
 # Miscellaneous function for the torus
 get_k_vector(m::Int,Nx::Int,Ny::Int) = (m÷Nx)/Nx,(m%Nx)/Ny # These are actually coefficients [m₁,m₂] such that k = m₁b₁+m₂b₂
 
-export string2bit,bit2string,bin2dex, sqfactorial, dex2bin, findLz,findLZ, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
+export string2bit,bit2string,bin2dex, sqfactorial, dex2bin,bin2dec, findLz,findLZ, findLzsphere, sphere_coef, dec2bin, dec2binreverse,get_k_vector
 end
