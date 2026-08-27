@@ -353,9 +353,9 @@ function collate_many_vectors(vectors::Vector{T} where T<:AbstractFQH_state;sepa
         dim = length(new_basis)
         println("Total dimension is $(dim)")
         if collumn_vector
-            new_coef = zeros((dim,N))
+            new_coef = zeros(ComplexF64,(dim,N))
         else
-            new_coef = zeros((N,dim))
+            new_coef = zeros(ComplexF64,(N,dim))
         end
 
         for i in 1:N
