@@ -11,6 +11,7 @@ function main()
 	@inlinearguments begin
 		@argumentrequired String filename "--file" "-f"
 		@argumentoptional String basisname "--basis" "-b"
+		@argumentoptional String normalize "--normalize"
 		@argumentflag decimal "--decimal"
 		@argumentoptional Int n_orb "--n_orb" "-o"
 		@argumentrequired String dirname "--directory" "-d"
@@ -56,6 +57,14 @@ function main()
 		return
 	end
 
+	if normalize != nothing
+		if lowercase(normalize) == "sphere"
+			state = sphere_normalize(state)
+		elseif lowercase(normalize) == "disk"
+			state = disk_normalize(state)
+		end
+	end
+	
 	# read directory of model states and take overlaps
 	overlap_sq = zeros(length(modelfiles)) # A list of squared overlap with each model state
 
