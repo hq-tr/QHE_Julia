@@ -33,7 +33,7 @@ mutable struct FQH_state_mutable <: AbstractFQH_state
     FQH_state_mutable(basis::Vector{BitVector}) = new(basis,zeros(length(basis)))
     FQH_state_mutable(basis::Vector{T}where T<:Integer,coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
     FQH_state_mutable(basis::Vector{T} where T<:Integer,No::Int64) = new(basis,zeros(length(basis)),No) # Only basis in decimal format
-    FQH_state() = new(BitVector[],Float64[]) # empty state
+    FQH_state_mutable() = new(BitVector[],Float64[]) # empty state
 end
 
 
