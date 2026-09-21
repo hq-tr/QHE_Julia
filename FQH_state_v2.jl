@@ -33,7 +33,7 @@ mutable struct FQH_state_mutable <: AbstractFQH_state
     FQH_state_mutable(basis::Vector{BitVector}) = new(basis,zeros(length(basis)))
     FQH_state_mutable(basis::Vector{T}where T<:Integer,coef::Vector{T} where T<:Number,No::Int64) = new(collect(map(x->dec2bin(x,No),basis)),coef)
     FQH_state_mutable(basis::Vector{T} where T<:Integer,No::Int64) = new(basis,zeros(length(basis)),No) # Only basis in decimal format
-    FQH_state() = new(BitVector[],Float64[]) # empty state
+    FQH_state_mutable() = new(BitVector[],Float64[]) # empty state
 end
 
 
@@ -46,7 +46,9 @@ sphere_coef(S,m) =   sqfactorial(S-m)/sqfactorial(S+m+1, 2S+1)
 # BASIC HANDLING OF A STATE
 dim(vec::AbstractFQH_state) = length(vec.basis)
 
-countorbital(vec::AbstractFQH_state) = length(vec.basis[1])
+count_e(vec::AbstractFQH_state) = dim(vec)> 0 ? count(vec.basis[1]) : 0
+countorbital(vec::AbstractFQH_state) = dim(vec) > 0 ? length(vec.basis[1]) : 0
+count_o(vec::AbstractFQH_state) = countorbital(vec)
 
 wfnorm(vec::AbstractFQH_state) = norm(vec.coef)
 
@@ -607,7 +609,7 @@ end
 
 export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
     invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, readbasis, collapse!, 
-    wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere2poly, disk2poly,
+    wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere2poly, disk2poly, count_e, count_o,
     sphere_normalize!, disk_normalize!, wfnormalize!, sphere2poly!,disk2poly!,getLz, getLzsphere,dim, get_density_disk, 
     get_density_sphere, overlap, +, -, *, ⋅, collate_vector,collate_many_vectors, display, get_Lz, get_Lz_sphere, 
     check_Lz_eigenstate,projection,projection_coefficients,monomial_coefficient,project_out,
