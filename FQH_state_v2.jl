@@ -630,6 +630,7 @@ function L2(vec::AbstractFQH_state)
     return sum(abs2, values(Lminus); init=0.0) / sum(abs2, vec.coef)
 end
 
+
 export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
     invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, readbasis, collapse!, 
     wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere2poly, disk2poly, count_e, count_o,
