@@ -605,12 +605,35 @@ function add_electron(vec::AbstractFQH_state,pos)
     return FQH_state(new_basis,vec.coef)
 end
 
+#------------- EXPECTATION VALUE OF L⁺L⁻ ON THE SPHERE
+# Returns <ψ|L⁺L⁻|ψ>/<ψ|ψ> = ||L⁻ψ||²/<ψ|ψ>.
+# Position p of the BitVector has Lz = m = S-(p-1), as in get_density_sphere, so L⁻ moves an electron
+# from position p to p+1 with coefficient √(S(S+1)-m(m-1)). No electron lies between p and p+1,
+# so there is no fermion sign.
+function L2(vec::AbstractFQH_state)
+    N_o = length(vec.basis[1])
+    S = (N_o-1)/2
+    Lminus = Dict{BitVector,ComplexF64}()
+    for (b,c) in zip(vec.basis, vec.coef)
+        for p in 1:(N_o-1)
+            if b[p] && !b[p+1]
+                m = S-(p-1)
+                new_b = copy(b)
+                new_b[p] = false
+                new_b[p+1] = true
+                Lminus[new_b] = get(Lminus, new_b, 0.0im) + sqrt(S*(S+1)-m*(m-1))*c
+            end
+        end
+    end
+    return sum(abs2, values(Lminus); init=0.0) / sum(abs2, vec.coef)
+end
+
 export AbstractFQH_state, FQH_state, FQH_state_mutable, prune!, 
     invert!, coefsort, coefsort!,readwf, readwfdecimal, readwfdec, printwf, readbasis, collapse!, 
     wfnorm, norm, sphere_normalize, disk_normalize, wfnormalize, sphere2poly, disk2poly,
     sphere_normalize!, disk_normalize!, wfnormalize!, sphere2poly!,disk2poly!,getLz, getLzsphere,dim, get_density_disk, 
     get_density_sphere, overlap, +, -, *, ⋅, collate_vector,collate_many_vectors, display, get_Lz, get_Lz_sphere, 
     check_Lz_eigenstate,projection,projection_coefficients,monomial_coefficient,project_out,
-    append_basis,append_basis!, overlap_old_method, add_electron, add_electron!, decimalbasis
+    append_basis,append_basis!, overlap_old_method, add_electron, add_electron!, decimalbasis, L2
 
 end # ----- END MODULE
